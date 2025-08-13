@@ -1,0 +1,163 @@
+program          = entry_block , { declaration | statement } ;
+entry_block      = "@" , ( "main" | "entry_point" ) , block ;
+block            = "{" , { declaration | statement } , "}" ;
+declaration      = function_decl
+                 | worker_decl
+                 | let_decl
+                 | module_decl
+                 | export_decl
+                 | import_decl
+                 ;
+
+function_decl    = "function" , func_id , "(" , [ param_list ] , ")" ,
+                   [ ":" , type ] , block ;
+
+worker_decl      = "worker" , func_id , "(" , [ param_list ] , ")" , block ;
+
+let_decl         = "let" , capsule_id , ":" , type , ";" ;
+
+param_list       = param , { "," , param } ;
+param            = capsule_id , ":" , type ;
+
+type             = prim_type
+                 | "capsule" , "<" , type , ">"
+                 | "packet" , "<" , type , ">"
+                 | "byte" , "[" , int_literal , "]" ;
+
+prim_type        = "u8" | "u16" | "u32" | "u64"
+                 | "i8" | "i16" | "i32" | "i64"
+                 | "f32" | "f64"
+                 | "bool"
+                 | "stamp"
+                 | "duration" ;
+
+module_decl      = "@module" , string_literal ;
+
+export_decl      = "@export" , ( func_id | "function" , func_id ) ;
+
+import_decl      = "@import" , string_literal , [ "as" , func_id ] ;
+statement        = init_stmt
+                 | load_stmt
+                 | call_stmt
+                 | exit_stmt
+                 | lease_stmt
+                 | sublease_stmt
+                 | release_stmt
+                 | checkexp_stmt
+                 | render_stmt
+                 | input_stmt
+                 | output_stmt
+                 | send_stmt
+                 | recv_stmt
+                 | spawn_stmt
+                 | join_stmt
+                 | stamp_stmt
+                 | expire_stmt
+                 | sleep_stmt
+                 | yield_stmt
+                 | error_stmt
+                 | if_stmt
+                 | loop_stmt
+                 | break_stmt
+                 | continue_stmt
+                 | goto_stmt
+                 | label_stmt
+                 | block
+                 ;
+init_stmt        = "#init" , capsule_id
+                 | "initialize" , "capsule" , capsule_id ;
+
+load_stmt        = "#load" , capsule_id , "," , value
+                 | "assign" , "value" , value , "to" , "capsule" , capsule_id ;
+
+call_stmt        = "#call" , func_id , [ "," , capsule_id ]
+                 | "invoke" , "function" , func_id , "with" , capsule_id ;
+
+exit_stmt        = "#exit"
+                 | "terminate" , "execution" ;
+lease_stmt       = "#lease" , capsule_id ;
+sublease_stmt    = "#sublease" , capsule_id ;
+release_stmt     = "#release" , capsule_id ;
+checkexp_stmt    = "#check_exp" , capsule_id ;
+render_stmt      = "#render" , capsule_id ;
+input_stmt       = "#input" , capsule_id ;
+output_stmt      = "#output" , capsule_id ;
+send_stmt        = "#send" , capsule_id , "," , capsule_id ;
+recv_stmt        = "#recv" , capsule_id , "," , capsule_id ;
+spawn_stmt       = "#spawn" , func_id , [ "," , arg_list ] ;
+join_stmt        = "#join" , capsule_id ;
+
+arg_list         = arg , { "," , arg } ;
+arg              = value | capsule_id | func_id ;
+stamp_stmt       = "#stamp" , capsule_id , "," , value ;
+expire_stmt      = "#expire" , capsule_id , "," , duration_literal ;
+sleep_stmt       = "#sleep" , duration_literal ;
+yield_stmt       = "#yield" ;
+error_stmt       = "#error" , capsule_id , "," , int_literal , "," , string_literal ;
+if_stmt          = "#if" , "(" , expr , ")" , block ,
+                   [ "#else" , block ] , "#endif" ;
+
+loop_stmt        = "#loop" , "(" , expr , ")" , block ;
+
+break_stmt       = "#break" ;
+continue_stmt    = "#continue" ;
+
+goto_stmt        = "goto" , ":" , identifier ;
+label_stmt       = ":" , identifier ;
+expr             = logical_or_expr ;
+
+logical_or_expr  = logical_and_expr , { "||" , logical_and_expr } ;
+logical_and_expr = equality_expr , { "&&" , equality_expr } ;
+equality_expr    = relational_expr ,
+                   { ( "==" | "!=" ) , relational_expr } ;
+relational_expr  = shift_expr ,
+                   { ( "<" | ">" | "<=" | ">=" ) , shift_expr } ;
+shift_expr       = additive_expr ,
+                   { ( "<<" | ">>" ) , additive_expr } ;
+additive_expr    = multiplicative_expr ,
+                   { ( "+" | "-" ) , multiplicative_expr } ;
+multiplicative_expr
+                 = unary_expr ,
+                   { ( "*" | "/" | "%" ) , unary_expr } ;
+unary_expr       = [ "!" | "~" | "-" ] , primary_expr ;
+
+primary_expr     = capsule_id
+                 | func_id
+                 | value
+                 | "(" , expr , ")" ;
+value            = hex_literal
+                 | int_literal
+                 | string_literal
+                 | bool_literal
+                 ;
+
+hex_literal      = "0x" , hex_digit , { hex_digit } ;
+int_literal      = digit , { digit } ;
+string_literal   = '"' , { string_char } , '"' ;
+bool_literal     = "true" | "false" ;
+duration_literal = int_literal , duration_unit ;
+
+duration_unit    = "ns" | "us" | "ms" | "s" | "m" | "h" ;
+
+string_char      = ? any char except " or \ ? | escape_seq ;
+escape_seq       = "\\" , ( "n" | "t" | '"' | "\\" | "x" , hex_digit , hex_digit ) ;
+
+letter           = "A".."Z" | "a".."z" ;
+digit            = "0".."9" ;
+hex_digit        = digit | "A".."F" | "a".."f" ;
+
+identifier       = letter , { letter | digit | "_" } ;
+capsule_id       = "$" , identifier ;
+func_id          = "$" , identifier ;
+
+
+
+
+
+
+
+
+
+
+
+
