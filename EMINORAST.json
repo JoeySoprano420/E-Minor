@@ -1,0 +1,770 @@
+{
+  "_type": "Program",
+  "entry": {
+    "_type": "EntryBlock",
+    "kind": "AT_MAIN",
+    "block": {
+      "_type": "Block",
+      "items": [
+        {
+          "_type": "ModuleDecl",
+          "path": "core/main",
+          "line": 2,
+          "column": 3
+        },
+        {
+          "_type": "ImportDecl",
+          "path": "lib/math",
+          "alias": {
+            "_type": "Identifier",
+            "name": "math",
+            "is_dollar": true,
+            "line": 3,
+            "column": 12
+          },
+          "line": 3,
+          "column": 3
+        },
+        {
+          "_type": "ExportDecl",
+          "symbol": {
+            "_type": "Identifier",
+            "name": "render",
+            "is_dollar": true,
+            "line": 4,
+            "column": 11
+          },
+          "line": 4,
+          "column": 3
+        },
+        {
+          "_type": "LetDecl",
+          "name": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 6,
+            "column": 9
+          },
+          "type_ref": {
+            "_type": "TypeRef",
+            "kind": "capsule",
+            "name": null,
+            "inner": {
+              "_type": "TypeRef",
+              "kind": "prim",
+              "name": "u8",
+              "inner": null,
+              "size": null,
+              "line": 1,
+              "column": 1
+            },
+            "size": null,
+            "line": 1,
+            "column": 1
+          },
+          "line": 6,
+          "column": 3
+        },
+        {
+          "_type": "LetDecl",
+          "name": {
+            "_type": "Identifier",
+            "name": "B0",
+            "is_dollar": true,
+            "line": 7,
+            "column": 9
+          },
+          "type_ref": {
+            "_type": "TypeRef",
+            "kind": "byte_array",
+            "name": null,
+            "inner": null,
+            "size": 16,
+            "line": 1,
+            "column": 1
+          },
+          "line": 7,
+          "column": 3
+        },
+        {
+          "_type": "LetDecl",
+          "name": {
+            "_type": "Identifier",
+            "name": "C0",
+            "is_dollar": true,
+            "line": 8,
+            "column": 9
+          },
+          "type_ref": {
+            "_type": "TypeRef",
+            "kind": "capsule",
+            "name": null,
+            "inner": {
+              "_type": "TypeRef",
+              "kind": "prim",
+              "name": "u32",
+              "inner": null,
+              "size": null,
+              "line": 1,
+              "column": 1
+            },
+            "size": null,
+            "line": 1,
+            "column": 1
+          },
+          "line": 8,
+          "column": 3
+        },
+        {
+          "_type": "InitStmt",
+          "line": 10,
+          "column": 3,
+          "target": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "LeaseStmt",
+          "line": 11,
+          "column": 3,
+          "target": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "LoadStmt",
+          "line": 12,
+          "column": 3,
+          "target": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          },
+          "value": {
+            "_type": "Literal",
+            "kind": "HEX",
+            "value": 42,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "StampStmt",
+          "line": 13,
+          "column": 3,
+          "target": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          },
+          "value": {
+            "_type": "Literal",
+            "kind": "BOOL",
+            "value": true,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "ExpireStmt",
+          "line": 14,
+          "column": 3,
+          "target": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          },
+          "duration": {
+            "_type": "Literal",
+            "kind": "DURATION",
+            "value": 5000000,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "RenderStmt",
+          "line": 15,
+          "column": 3,
+          "target": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "CheckExpStmt",
+          "line": 16,
+          "column": 3,
+          "target": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "SendStmt",
+          "line": 18,
+          "column": 3,
+          "chan": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          },
+          "pkt": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "RecvStmt",
+          "line": 19,
+          "column": 3,
+          "chan": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          },
+          "pkt": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "SpawnStmt",
+          "line": 21,
+          "column": 3,
+          "func": {
+            "_type": "Identifier",
+            "name": "worker0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          },
+          "args": [
+            {
+              "_type": "Identifier",
+              "name": "A0",
+              "is_dollar": true,
+              "line": 1,
+              "column": 1
+            },
+            {
+              "_type": "Literal",
+              "kind": "INT",
+              "value": 123,
+              "line": 1,
+              "column": 1
+            },
+            {
+              "_type": "Literal",
+              "kind": "STRING",
+              "value": "payload",
+              "line": 1,
+              "column": 1
+            }
+          ]
+        },
+        {
+          "_type": "JoinStmt",
+          "line": 22,
+          "column": 3,
+          "thread": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "InitStmt",
+          "line": 24,
+          "column": 3,
+          "target": {
+            "_type": "Identifier",
+            "name": "C0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "LoadStmt",
+          "line": 25,
+          "column": 3,
+          "target": {
+            "_type": "Identifier",
+            "name": "C0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          },
+          "value": {
+            "_type": "Literal",
+            "kind": "INT",
+            "value": 5,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "CallStmt",
+          "line": 26,
+          "column": 3,
+          "func": {
+            "_type": "Identifier",
+            "name": "render",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          },
+          "arg": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "IfStmt",
+          "line": 27,
+          "column": 3,
+          "cond": {
+            "_type": "BinaryOp",
+            "op": "||",
+            "lhs": {
+              "_type": "BinaryOp",
+              "op": "&&",
+              "lhs": {
+                "_type": "BinaryOp",
+                "op": "<",
+                "lhs": {
+                  "_type": "BinaryOp",
+                  "op": "+",
+                  "lhs": {
+                    "_type": "Literal",
+                    "kind": "INT",
+                    "value": 1,
+                    "line": 1,
+                    "column": 1
+                  },
+                  "rhs": {
+                    "_type": "BinaryOp",
+                    "op": "*",
+                    "lhs": {
+                      "_type": "Literal",
+                      "kind": "INT",
+                      "value": 2,
+                      "line": 1,
+                      "column": 1
+                    },
+                    "rhs": {
+                      "_type": "Literal",
+                      "kind": "INT",
+                      "value": 3,
+                      "line": 1,
+                      "column": 1
+                    },
+                    "line": 1,
+                    "column": 1
+                  },
+                  "line": 1,
+                  "column": 1
+                },
+                "rhs": {
+                  "_type": "Literal",
+                  "kind": "INT",
+                  "value": 10,
+                  "line": 1,
+                  "column": 1
+                },
+                "line": 1,
+                "column": 1
+              },
+              "rhs": {
+                "_type": "Literal",
+                "kind": "BOOL",
+                "value": true,
+                "line": 1,
+                "column": 1
+              },
+              "line": 1,
+              "column": 1
+            },
+            "rhs": {
+              "_type": "Literal",
+              "kind": "BOOL",
+              "value": false,
+              "line": 1,
+              "column": 1
+            },
+            "line": 1,
+            "column": 1
+          },
+          "then_block": {
+            "_type": "Block",
+            "items": [
+              {
+                "_type": "LabelStmt",
+                "name": "then_block",
+                "line": 29,
+                "column": 5
+              },
+              {
+                "_type": "CallStmt",
+                "line": 30,
+                "column": 5,
+                "func": {
+                  "_type": "Identifier",
+                  "name": "render",
+                  "is_dollar": true,
+                  "line": 1,
+                  "column": 1
+                },
+                "arg": {
+                  "_type": "Identifier",
+                  "name": "A0",
+                  "is_dollar": true,
+                  "line": 1,
+                  "column": 1
+                }
+              },
+              {
+                "_type": "InputStmt",
+                "line": 31,
+                "column": 5,
+                "target": {
+                  "_type": "Identifier",
+                  "name": "A0",
+                  "is_dollar": true,
+                  "line": 1,
+                  "column": 1
+                }
+              },
+              {
+                "_type": "OutputStmt",
+                "line": 32,
+                "column": 5,
+                "target": {
+                  "_type": "Identifier",
+                  "name": "A0",
+                  "is_dollar": true,
+                  "line": 1,
+                  "column": 1
+                }
+              }
+            ],
+            "line": 28,
+            "column": 3
+          },
+          "else_block": {
+            "_type": "Block",
+            "items": [
+              {
+                "_type": "LabelStmt",
+                "name": "else_block",
+                "line": 34,
+                "column": 5
+              },
+              {
+                "_type": "ErrorStmt",
+                "line": 35,
+                "column": 5,
+                "target": {
+                  "_type": "Identifier",
+                  "name": "A0",
+                  "is_dollar": true,
+                  "line": 1,
+                  "column": 1
+                },
+                "code": {
+                  "_type": "Literal",
+                  "kind": "INT",
+                  "value": 3,
+                  "line": 1,
+                  "column": 1
+                },
+                "message": {
+                  "_type": "Literal",
+                  "kind": "STRING",
+                  "value": "oops",
+                  "line": 1,
+                  "column": 1
+                }
+              }
+            ],
+            "line": 33,
+            "column": 3
+          }
+        },
+        {
+          "_type": "LoopStmt",
+          "line": 38,
+          "column": 3,
+          "cond": {
+            "_type": "BinaryOp",
+            "op": "==",
+            "lhs": {
+              "_type": "Identifier",
+              "name": "C0",
+              "is_dollar": true,
+              "line": 1,
+              "column": 1
+            },
+            "rhs": {
+              "_type": "Identifier",
+              "name": "C0",
+              "is_dollar": true,
+              "line": 1,
+              "column": 1
+            },
+            "line": 1,
+            "column": 1
+          },
+          "body": {
+            "_type": "Block",
+            "items": [
+              {
+                "_type": "YieldStmt",
+                "line": 40,
+                "column": 5
+              },
+              {
+                "_type": "GotoStmt",
+                "label": "end",
+                "line": 41,
+                "column": 5
+              }
+            ],
+            "line": 39,
+            "column": 3
+          }
+        },
+        {
+          "_type": "LabelStmt",
+          "name": "end",
+          "line": 44,
+          "column": 3
+        },
+        {
+          "_type": "SubleaseStmt",
+          "line": 45,
+          "column": 3,
+          "target": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "ReleaseStmt",
+          "line": 46,
+          "column": 3,
+          "target": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "SleepStmt",
+          "line": 47,
+          "column": 3,
+          "duration": {
+            "_type": "Literal",
+            "kind": "DURATION",
+            "value": 2000000000,
+            "line": 1,
+            "column": 1
+          }
+        },
+        {
+          "_type": "ExitStmt",
+          "line": 48,
+          "column": 3
+        }
+      ],
+      "line": 1,
+      "column": 1
+    },
+    "line": 1,
+    "column": 1
+  },
+  "items": [
+    {
+      "_type": "FunctionDecl",
+      "name": {
+        "_type": "Identifier",
+        "name": "render",
+        "is_dollar": true,
+        "line": 52,
+        "column": 1
+      },
+      "params": [
+        {
+          "_type": "Param",
+          "name": {
+            "_type": "Identifier",
+            "name": "A0",
+            "is_dollar": true,
+            "line": 52,
+            "column": 12
+          },
+          "type_ref": {
+            "_type": "TypeRef",
+            "kind": "capsule",
+            "name": null,
+            "inner": {
+              "_type": "TypeRef",
+              "kind": "prim",
+              "name": "u8",
+              "inner": null,
+              "size": null,
+              "line": 1,
+              "column": 1
+            },
+            "size": null,
+            "line": 1,
+            "column": 1
+          },
+          "line": 52,
+          "column": 12
+        }
+      ],
+      "return_type": {
+        "_type": "TypeRef",
+        "kind": "prim",
+        "name": "u8",
+        "inner": null,
+        "size": null,
+        "line": 52,
+        "column": 35
+      },
+      "body": {
+        "_type": "Block",
+        "items": [
+          {
+            "_type": "RenderStmt",
+            "line": 55,
+            "column": 5,
+            "target": {
+              "_type": "Identifier",
+              "name": "A0",
+              "is_dollar": true,
+              "line": 1,
+              "column": 1
+            }
+          },
+          {
+            "_type": "ExitStmt",
+            "line": 56,
+            "column": 5
+          }
+        ],
+        "line": 54,
+        "column": 3
+      },
+      "line": 52,
+      "column": 1
+    },
+    {
+      "_type": "WorkerDecl",
+      "name": {
+        "_type": "Identifier",
+        "name": "worker0",
+        "is_dollar": true,
+        "line": 60,
+        "column": 1
+      },
+      "params": [
+        {
+          "_type": "Param",
+          "name": {
+            "_type": "Identifier",
+            "name": "T0",
+            "is_dollar": true,
+            "line": 60,
+            "column": 10
+          },
+          "type_ref": {
+            "_type": "TypeRef",
+            "kind": "capsule",
+            "name": null,
+            "inner": {
+              "_type": "TypeRef",
+              "kind": "prim",
+              "name": "u8",
+              "inner": null,
+              "size": null,
+              "line": 1,
+              "column": 1
+            },
+            "size": null,
+            "line": 1,
+            "column": 1
+          },
+          "line": 60,
+          "column": 10
+        }
+      ],
+      "body": {
+        "_type": "Block",
+        "items": [
+          {
+            "_type": "RenderStmt",
+            "line": 63,
+            "column": 5,
+            "target": {
+              "_type": "Identifier",
+              "name": "T0",
+              "is_dollar": true,
+              "line": 1,
+              "column": 1
+            }
+          }
+        ],
+        "line": 62,
+        "column": 3
+      },
+      "line": 60,
+      "column": 1
+    }
+  ],
+  "line": 1,
+  "column": 1
+}
