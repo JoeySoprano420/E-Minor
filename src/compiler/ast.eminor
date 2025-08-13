@@ -1,0 +1,16 @@
+@module "compiler/ast"
+let $NK_PROGRAM: u16; let $NK_FUNC: u16; let $NK_BLOCK: u16; let $NK_LET: u16;
+let $NK_IF: u16; let $NK_LOOP: u16; let $NK_RETURN: u16; let $NK_BINOP: u16; let $NK_UNOP: u16;
+let $NK_CALL: u16; let $NK_VAR: u16; let $NK_CONST: u16; let $NK_LABEL: u16; let $NK_GOTO: u16;
+function $new_program() : capsule<ast_node> { { #exit } }
+function $new_block() : capsule<ast_node> { { #exit } }
+function $block_add($B: capsule<ast_node>, $S: capsule<ast_node>) { { #exit } }
+function $new_func($name: string, $params: capsule<ast_node>, $ret: string, $body: capsule<ast_node>) : capsule<ast_node> { { #exit } }
+function $new_let($name: string, $type: string, $init: capsule<ast_node>) : capsule<ast_node> { { #exit } }
+function $new_if($c: capsule<ast_node>, $t: capsule<ast_node>, $e: capsule<ast_node>) : capsule<ast_node> { { #exit } }
+function $new_loop($c: capsule<ast_node>, $b: capsule<ast_node>) : capsule<ast_node> { { #exit } }
+function $new_bin($op: string, $l: capsule<ast_node>, $r: capsule<ast_node>) : capsule<ast_node> { { #exit } }
+function $new_un($op: string, $r: capsule<ast_node>) : capsule<ast_node> { { #exit } }
+function $new_call($fn: string, $args: capsule<ast_node>) : capsule<ast_node> { { #exit } }
+function $new_var($name: string) : capsule<ast_node> { { #exit } }
+function $new_const_int($v: i64) : capsule<ast_node> { { #exit } }

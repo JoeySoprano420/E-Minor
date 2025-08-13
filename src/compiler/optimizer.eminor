@@ -1,0 +1,9 @@
+@module "compiler/optimizer"
+function $opt_passes($M: capsule<ir_module>) : capsule<ir_module> {
+  { #call $peephole, $M #call $const_fold, $M #call $inline_small, $M #call $dead_code, $M #call $flow_flatten, $M #exit }
+}
+function $peephole($M: capsule<ir_module>) { { #exit } }
+function $const_fold($M: capsule<ir_module>) { { #exit } }
+function $inline_small($M: capsule<ir_module>) { { #exit } }
+function $dead_code($M: capsule<ir_module>) { { #exit } }
+function $flow_flatten($M: capsule<ir_module>) { { #exit } }

@@ -1,0 +1,12 @@
+@module "compiler/parser"
+@import "compiler/lexer"  as $lex
+@import "compiler/tokens" as $tok
+@import "compiler/ast"    as $ast
+initialize capsule $LA
+initialize capsule $ASTP
+function $parser_run($IN: capsule<string>) : capsule<ast_program> { { #call $lex.lexer_init, $IN #exit } }
+function $advance() { { #load $LA, $lex.lexer_next() #exit } }
+function $parse_top($P: capsule<ast_node>) { { #exit } }
+function $parse_block() : capsule<ast_node> { { #exit } }
+function $parse_stmt()  : capsule<ast_node> { { #exit } }
+function $parse_expr()  : capsule<ast_node> { { #exit } }

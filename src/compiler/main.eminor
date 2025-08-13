@@ -1,0 +1,15 @@
+@module "compiler/main"
+@entry_point {
+  initialize capsule $IN
+  initialize capsule $AST
+  initialize capsule $IR
+  initialize capsule $BIN
+  #input $IN
+  #call $lex_and_parse, $IN
+  #call $starcode_validate, $AST
+  #call $emit_ir, $AST
+  #call $optimize_ir, $IR
+  #call $emit_binary, $IR
+  #call $write_outputs, $BIN
+  #exit
+}

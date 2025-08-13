@@ -1,0 +1,11 @@
+@module "compiler/ir_emitter"
+initialize capsule $TEXT
+initialize capsule $DATA
+initialize capsule $RODATA
+initialize capsule $SYMS
+initialize capsule $RELOCS
+function $ir_emit_module($P: capsule<ast_program>) : capsule<ir_module> { { #exit } }
+function $emit_func($F: capsule<ast_node>) { { #exit } }
+function $emit_stmt($S: capsule<ast_node>) { { #exit } }
+function $emit_expr($E: capsule<ast_node>) { { #exit } }
+function $patch_and_pack() : capsule<ir_module> { { #exit } }

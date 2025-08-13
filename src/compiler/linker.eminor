@@ -1,0 +1,2 @@
+@module "compiler/linker"
+function $link_multi_segment($M: capsule<ir_module>) : capsule<bin_artifacts> { { #exit } }

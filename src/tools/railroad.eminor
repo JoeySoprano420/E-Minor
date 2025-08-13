@@ -1,0 +1,2 @@
+@module "tools/railroad"
+function $grammar_to_railroad($IN: capsule<string>) : capsule<string> { { #exit } }

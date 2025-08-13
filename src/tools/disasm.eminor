@@ -1,0 +1,3 @@
+@module "tools/disasm"
+@import "compiler/ir_spec" as $ir
+function $disassemble($HEX: capsule<string>) : capsule<string> { { #exit } }

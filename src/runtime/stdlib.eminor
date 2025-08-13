@@ -1,0 +1,7 @@
+@module "runtime/stdlib"
+function $render($A: capsule<any>) { { #exit } }
+function $input($A: capsule<any>)  { { #exit } }
+function $output($A: capsule<any>) { { #exit } }
+function $sleep_ns($dur_ns: u64) { { #exit } }
+function $send($chan: capsule<any>, $pkt: capsule<any>) { { #exit } }
+function $recv($chan: capsule<any>, $pkt: capsule<any>) { { #exit } }

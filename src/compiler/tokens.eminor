@@ -1,0 +1,17 @@
+@module "compiler/tokens"
+@export $TK
+let $TK_EOF: u16; let $TK_ID: u16; let $TK_NUMBER: u16; let $TK_STRING: u16; let $TK_BOOL: u16;
+let $TK_LPAREN: u16; let $TK_RPAREN: u16; let $TK_LBRACE: u16; let $TK_RBRACE: u16;
+let $TK_COMMA: u16; let $TK_SEMI: u16; let $TK_COLON: u16;
+let $TK_PLUS: u16; let $TK_MINUS: u16; let $TK_STAR: u16; let $TK_SLASH: u16; let $TK_PERCENT: u16;
+let $TK_EQ: u16; let $TK_NEQ: u16; let $TK_LT: u16; let $TK_GT: u16; let $TK_LE: u16; let $TK_GE: u16;
+let $TK_ANDAND: u16; let $TK_OROR: u16; let $TK_ASSIGN: u16;
+let $TK_AT_MAIN: u16; let $TK_AT_ENTRY_POINT: u16; let $TK_FUNCTION: u16; let $TK_WORKER: u16; let $TK_LET: u16;
+let $TK_MODULE: u16; let $TK_IMPORT: u16; let $TK_EXPORT: u16; let $TK_GOTO: u16; let $TK_LABEL: u16;
+let $TK_HASH_INIT: u16; let $TK_HASH_LOAD: u16; let $TK_HASH_CALL: u16; let $TK_HASH_EXIT: u16;
+let $TK_HASH_IF: u16; let $TK_HASH_ELSE: u16; let $TK_HASH_ENDIF: u16; let $TK_HASH_LOOP: u16;
+let $TK_HASH_RENDER: u16; let $TK_HASH_INPUT: u16; let $TK_HASH_OUTPUT: u16;
+let $TK_HASH_SEND: u16; let $TK_HASH_RECV: u16; let $TK_HASH_SPAWN: u16; let $TK_HASH_JOIN: u16;
+let $TK_HASH_LEASE: u16; let $TK_HASH_SUBLEASE: u16; let $TK_HASH_RELEASE: u16; let $TK_HASH_CHECKEXP: u16;
+let $TK_HASH_STAMP: u16; let $TK_HASH_EXPIRE: u16; let $TK_HASH_SLEEP: u16; let $TK_HASH_YIELD: u16; let $TK_HASH_ERROR: u16;
+function $token_name($k: u16) : string { { #exit } }

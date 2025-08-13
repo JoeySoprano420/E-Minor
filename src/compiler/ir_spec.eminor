@@ -1,0 +1,7 @@
+@module "compiler/ir_spec"
+let $OP_INIT: u8; let $OP_LOAD: u8; let $OP_CALL: u8; let $OP_CALLA: u8; let $OP_EXIT: u8;
+let $OP_RENDER: u8; let $OP_INPUT: u8; let $OP_OUTPUT: u8;
+let $OP_SEND: u8; let $OP_RECV: u8; let $OP_SPAWN: u8; let $OP_JOIN: u8;
+let $OP_STAMP: u8; let $OP_EXPIRE: u8; let $OP_SLEEP: u8; let $OP_YIELD: u8; let $OP_ERROR: u8;
+let $OP_PUSHK: u8; let $OP_PUSHCAP: u8; let $OP_UNOP: u8; let $OP_BINOP: u8;
+let $OP_JZ: u8; let $OP_JNZ: u8; let $OP_JMP: u8; let $OP_END: u8;

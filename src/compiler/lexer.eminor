@@ -1,0 +1,8 @@
+@module "compiler/lexer"
+@import "compiler/tokens" as $tok
+function $lexer_init($IN: capsule<string>) { { #exit } }
+function $lexer_next() : capsule<token> { { #exit } }
+function $scan_identifier() : capsule<token> { { #exit } }
+function $scan_number_or_duration() : capsule<token> { { #exit } }
+function $scan_string() : capsule<token> { { #exit } }
+function $skip_ws_and_comments() { { #exit } }
