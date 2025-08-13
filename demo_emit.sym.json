@@ -1,0 +1,76 @@
+{
+  "const_pool": [
+    {
+      "kind": "HEX",
+      "value": 255
+    },
+    {
+      "kind": "INT",
+      "value": 1
+    },
+    {
+      "kind": "INT",
+      "value": 2
+    },
+    {
+      "kind": "BOOL",
+      "value": true
+    }
+  ],
+  "func_index": {
+    "render": 0
+  },
+  "labels": {},
+  "opcodes": {
+    "NOP": 0,
+    "INIT": 1,
+    "LOAD": 2,
+    "CALL": 3,
+    "CALLA": 4,
+    "EXIT": 5,
+    "LEASE": 16,
+    "SUBLEASE": 17,
+    "RELEASE": 18,
+    "CHECKEXP": 19,
+    "RENDER": 32,
+    "INPUT": 33,
+    "OUTPUT": 34,
+    "SEND": 48,
+    "RECV": 49,
+    "SPAWN": 64,
+    "JOIN": 65,
+    "STAMP": 80,
+    "EXPIRE": 81,
+    "SLEEP": 82,
+    "YIELD": 83,
+    "ERROR": 96,
+    "PUSHK": 128,
+    "PUSHCAP": 130,
+    "UNOP": 144,
+    "BINOP": 145,
+    "JZ": 160,
+    "JNZ": 161,
+    "JMP": 162,
+    "END": 255
+  },
+  "binops": {
+    "||": 1,
+    "&&": 2,
+    "==": 3,
+    "!=": 4,
+    "<": 5,
+    ">": 6,
+    "<=": 7,
+    ">=": 8,
+    "+": 9,
+    "-": 10,
+    "*": 11,
+    "/": 12,
+    "%": 13
+  },
+  "unops": {
+    "!": 1,
+    "~": 2,
+    "u-": 3
+  }
+}
