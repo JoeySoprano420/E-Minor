@@ -1,0 +1,229 @@
+(*
+  E Minor v1.0 — Official Grammar (EBNF)
+  Status: Stable
+  Notes:
+    - Case-sensitive keywords.
+    - Shortcode directives begin with '#', long-form uses English superlatives.
+    - Whitespace and comments are insignificant except as separators.
+    - This grammar encodes operator precedence via recursive descent levels.
+*)
+
+grammar = program ;
+
+program =
+  entry_block , { top_level_decl | statement } ;
+
+entry_block =
+  "@" , ( "main" | "entry_point" ) , block ;
+
+block =
+  "{" , { top_level_decl | statement } , "}" ;
+
+(* -------- Top-level Declarations -------- *)
+top_level_decl =
+    function_decl
+  | worker_decl
+  | let_decl
+  | module_decl
+  | export_decl
+  | import_decl ;
+
+function_decl =
+  "function" , func_id , "(" , [ param_list ] , ")" , [ ":" , type ] , block ;
+
+worker_decl =
+  "worker" , func_id , "(" , [ param_list ] , ")" , block ;
+
+let_decl =
+  "let" , capsule_id , ":" , type , ";" ;
+
+param_list =
+  param , { "," , param } ;
+
+param =
+  capsule_id , ":" , type ;
+
+type =
+    prim_type
+  | "capsule" , "<" , type , ">"
+  | "packet"  , "<" , type , ">"
+  | "byte" , "[" , int_literal , "]" ;
+
+prim_type =
+    "u8" | "u16" | "u32" | "u64"
+  | "i8" | "i16" | "i32" | "i64"
+  | "f32" | "f64"
+  | "bool"
+  | "stamp"
+  | "duration" ;
+
+module_decl =
+  "@module" , string_literal ;
+
+export_decl =
+  "@export" , ( func_id | "function" , func_id ) ;
+
+import_decl =
+  "@import" , string_literal , [ "as" , func_id ] ;
+
+(* -------- Statements -------- *)
+statement =
+    (* Shortcode core *)
+    init_stmt_sc       | load_stmt_sc       | call_stmt_sc      | exit_stmt_sc
+  | lease_stmt_sc      | sublease_stmt_sc   | release_stmt_sc   | checkexp_stmt_sc
+  | render_stmt_sc     | input_stmt_sc      | output_stmt_sc
+  | send_stmt_sc       | recv_stmt_sc       | spawn_stmt_sc     | join_stmt_sc
+  | stamp_stmt_sc      | expire_stmt_sc     | sleep_stmt_sc     | yield_stmt_sc
+  | error_stmt_sc
+
+    (* Long-form synonyms *)
+  | init_stmt_lf       | load_stmt_lf       | call_stmt_lf      | exit_stmt_lf
+
+    (* Control flow *)
+  | if_stmt | loop_stmt | break_stmt | continue_stmt | goto_stmt | label_stmt ;
+
+(* --- Shortcode Forms --- *)
+init_stmt_sc     = "#init"     , capsule_id ;
+load_stmt_sc     = "#load"     , capsule_id , "," , value ;
+call_stmt_sc     = "#call"     , func_id , [ "," , capsule_id ] ;
+exit_stmt_sc     = "#exit" ;
+
+lease_stmt_sc    = "#lease"    , capsule_id ;
+sublease_stmt_sc = "#sublease" , capsule_id ;
+release_stmt_sc  = "#release"  , capsule_id ;
+checkexp_stmt_sc = "#check_exp", capsule_id ;
+
+render_stmt_sc   = "#render"   , capsule_id ;
+input_stmt_sc    = "#input"    , capsule_id ;
+output_stmt_sc   = "#output"   , capsule_id ;
+
+send_stmt_sc     = "#send"     , capsule_id , "," , capsule_id ;  (* chan, packet *)
+recv_stmt_sc     = "#recv"     , capsule_id , "," , capsule_id ;  (* chan, packet *)
+spawn_stmt_sc    = "#spawn"    , func_id , [ "," , arg_list ] ;
+join_stmt_sc     = "#join"     , capsule_id ;                     (* thread stamp *)
+
+stamp_stmt_sc    = "#stamp"    , capsule_id , "," , value ;
+expire_stmt_sc   = "#expire"   , capsule_id , "," , duration_literal ;
+sleep_stmt_sc    = "#sleep"    , duration_literal ;
+yield_stmt_sc    = "#yield" ;
+
+error_stmt_sc    = "#error"    , capsule_id , "," , value , "," , string_literal ;
+
+(* --- Long-Form Synonyms --- *)
+init_stmt_lf =
+  "initialize" , "capsule" , capsule_id ;
+
+load_stmt_lf =
+  "assign" , "value" , value , "to" , "capsule" , capsule_id ;
+
+call_stmt_lf =
+  "invoke" , "function" , func_id , [ "with" , capsule_id ] ;
+
+exit_stmt_lf =
+  "terminate" , "execution" ;
+
+(* --- Control Flow --- *)
+if_stmt =
+  "#if" , "(" , expr , ")" , block , [ "#else" , block ] , "#endif" ;
+
+loop_stmt =
+  "#loop" , "(" , expr , ")" , block ;
+
+break_stmt =
+  "#break" ;
+
+continue_stmt =
+  "#continue" ;
+
+goto_stmt =
+  "goto" , ":" , identifier ;
+
+label_stmt =
+  ":" , identifier ;
+
+(* -------- Arguments & Expressions -------- *)
+arg_list =
+  arg , { "," , arg } ;
+
+arg =
+    value
+  | capsule_id
+  | func_id ;
+
+(* Precedence: || lowest … unary highest *)
+expr              = logical_or_expr ;
+
+logical_or_expr   = logical_and_expr , { "||" , logical_and_expr } ;
+logical_and_expr  = equality_expr , { "&&" , equality_expr } ;
+equality_expr     = relational_expr , { ( "==" | "!=" ) , relational_expr } ;
+relational_expr   = additive_expr , { ( "<" | ">" | "<=" | ">=" ) , additive_expr } ;
+additive_expr     = multiplicative_expr , { ( "+" | "-" ) , multiplicative_expr } ;
+multiplicative_expr =
+  unary_expr , { ( "*" | "/" | "%" ) , unary_expr } ;
+
+unary_expr        = [ "!" | "~" | "-" ] , primary ;
+
+primary =
+    capsule_id
+  | func_id
+  | value
+  | "(" , expr , ")" ;
+
+(* -------- Values & Literals -------- *)
+value =
+    int_literal
+  | hex_literal
+  | string_literal
+  | bool_literal ;
+
+int_literal =
+  digit , { digit } ;
+
+hex_literal =
+  "0x" , hex_digit , { hex_digit } ;
+
+duration_literal =
+  int_literal , duration_unit ;
+
+duration_unit =
+  "ns" | "ms" | "s" | "m" | "h" ;
+
+bool_literal =
+  "true" | "false" ;
+
+string_literal =
+  '"' , { string_char } , '"' ;
+
+string_char =
+    ? any character except '"' or '\' ?
+  | '\' , ( '"' | '\' | "n" | "t" | "x" , hex_digit , hex_digit ) ;
+
+(* -------- Identifiers -------- *)
+identifier =
+  letter , { letter | digit | "_" } ;
+
+letter =
+  "A".."Z" | "a".."z" ;
+
+digit =
+  "0".."9" ;
+
+hex_digit =
+  digit | "A".."F" | "a".."f" ;
+
+capsule_id =
+  "$" , identifier ;
+
+func_id =
+  "$" , identifier ;
+
+(* -------- Lexical: Whitespace & Comments -------- *)
+(* A lexer should ignore the following between tokens: *)
+WHITESPACE =
+  { " " | "\t" | "\r" | "\n" } ;
+
+COMMENT =
+    "//" , { ? not end-of-line ? } , ( "\n" | "\r\n" | EOF )
+  | "/*" , { ? any char, not "*/" ? } , "*/" ;
+
+EOF = ? end of file ? ;
