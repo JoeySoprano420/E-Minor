@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8" />
+<title>E Minor v1.0 — Railroad Diagrams</title>
+<style>
+  body { font-family: Inter, Arial, sans-serif; background:#f7f7f9; color:#222; }
+  .wrap { max-width: 1200px; margin: 2rem auto; background:#fff; padding: 1.5rem 2rem; border-radius: 14px; box-shadow: 0 2px 24px rgba(0,0,0,0.06);}
+  svg { background:#fafafa; border:1px solid #ddd; border-radius: 12px; }
+  pre { background:#fafafa; border:1px solid #eee; padding:1rem; border-radius:12px; overflow:auto; }
+</style></head>
+<body>
+<div class="wrap">
+  <h1>Railroad Diagrams — E Minor v1.0</h1>
+  <svg width="1000" height="4450" xmlns="http://www.w3.org/2000/svg">
+    <g><circle cx="10" cy="24" r="4" fill="#333"/><line x1="14" y1="24" x2="20" y2="24" stroke="#333"/>
+<rect x="20" y="10" width="164" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="102.0" y="29.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">@main/@entry_point</text>
+<line x1="184" y1="24" x2="214" y2="24" stroke="#333"/>
+<rect x="214" y="10" width="28" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="228.0" y="29.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">{</text>
+<line x1="242" y1="24" x2="272" y2="24" stroke="#333"/>
+<rect x="272" y="10" width="108" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="326.0" y="29.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">decl/stmt …</text>
+<line x1="380" y1="24" x2="410" y2="24" stroke="#333"/>
+<rect x="410" y="10" width="28" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="424.0" y="29.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">}</text>
+<line x1="438" y1="24" x2="468" y2="24" stroke="#333"/>
+<circle cx="468" cy="24" r="4" fill="#333"/></g><text x="20" y="8" font-family="Inter,Arial" font-weight="bold">program</text><g><circle cx="10" cy="94" r="4" fill="#333"/><line x1="14" y1="94" x2="20" y2="94" stroke="#333"/>
+<rect x="20" y="80" width="84" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="62.0" y="99.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">#init $A</text>
+<line x1="104" y1="94" x2="134" y2="94" stroke="#333"/>
+<rect x="134" y="80" width="140" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="204.0" y="99.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">#load $A, <val></text>
+<line x1="274" y1="94" x2="304" y2="94" stroke="#333"/>
+<rect x="304" y="80" width="124" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="366.0" y="99.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">#call $fn, $A</text>
+<line x1="428" y1="94" x2="458" y2="94" stroke="#333"/>
+<rect x="458" y="80" width="60" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="488.0" y="99.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">#exit</text>
+<line x1="518" y1="94" x2="548" y2="94" stroke="#333"/>
+<circle cx="548" cy="94" r="4" fill="#333"/></g><text x="20" y="78" font-family="Inter,Arial" font-weight="bold">statement (shortcode)</text><g><circle cx="10" cy="234" r="4" fill="#333"/><line x1="14" y1="234" x2="20" y2="234" stroke="#333"/>
+<rect x="20" y="220" width="188" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="114.0" y="239.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">initialize capsule $A</text>
+<line x1="208" y1="234" x2="238" y2="234" stroke="#333"/>
+<rect x="238" y="220" width="276" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="376.0" y="239.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">assign value <val> to capsule $A</text>
+<line x1="514" y1="234" x2="544" y2="234" stroke="#333"/>
+<rect x="544" y="220" width="236" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="662.0" y="239.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">invoke function $fn with $A</text>
+<line x1="780" y1="234" x2="810" y2="234" stroke="#333"/>
+<rect x="810" y="220" width="172" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="896.0" y="239.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">terminate execution</text>
+<line x1="982" y1="234" x2="1012" y2="234" stroke="#333"/>
+<circle cx="1012" cy="234" r="4" fill="#333"/></g><text x="20" y="218" font-family="Inter,Arial" font-weight="bold">statement (long-form)</text><g><circle cx="10" cy="514" r="4" fill="#333"/><line x1="14" y1="514" x2="20" y2="514" stroke="#333"/>
+<rect x="20" y="500" width="100" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="70.0" y="519.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">#if (expr)</text>
+<line x1="120" y1="514" x2="150" y2="514" stroke="#333"/>
+<rect x="150" y="500" width="60" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="180.0" y="519.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">{...}</text>
+<line x1="210" y1="514" x2="240" y2="514" stroke="#333"/>
+<rect x="240" y="500" width="60" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="270.0" y="519.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">#else</text>
+<line x1="300" y1="514" x2="330" y2="514" stroke="#333"/>
+<rect x="330" y="500" width="60" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="360.0" y="519.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">{...}</text>
+<line x1="390" y1="514" x2="420" y2="514" stroke="#333"/>
+<rect x="420" y="500" width="68" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="454.0" y="519.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">#endif</text>
+<line x1="488" y1="514" x2="518" y2="514" stroke="#333"/>
+<circle cx="518" cy="514" r="4" fill="#333"/></g><text x="20" y="498" font-family="Inter,Arial" font-weight="bold">if/else</text><g><circle cx="10" cy="1074" r="4" fill="#333"/><line x1="14" y1="1074" x2="20" y2="1074" stroke="#333"/>
+<rect x="20" y="1060" width="116" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="78.0" y="1079.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">#loop (expr)</text>
+<line x1="136" y1="1074" x2="166" y2="1074" stroke="#333"/>
+<rect x="166" y="1060" width="60" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="196.0" y="1079.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">{...}</text>
+<line x1="226" y1="1074" x2="256" y2="1074" stroke="#333"/>
+<circle cx="256" cy="1074" r="4" fill="#333"/></g><text x="20" y="1058" font-family="Inter,Arial" font-weight="bold">loop</text><g><circle cx="10" cy="2194" r="4" fill="#333"/><line x1="14" y1="2194" x2="20" y2="2194" stroke="#333"/>
+<rect x="20" y="2180" width="76" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="58.0" y="2199.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">primary</text>
+<line x1="96" y1="2194" x2="126" y2="2194" stroke="#333"/>
+<rect x="126" y="2180" width="60" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="156.0" y="2199.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">unary</text>
+<line x1="186" y1="2194" x2="216" y2="2194" stroke="#333"/>
+<rect x="216" y="2180" width="60" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="246.0" y="2199.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">*,/,%</text>
+<line x1="276" y1="2194" x2="306" y2="2194" stroke="#333"/>
+<rect x="306" y="2180" width="44" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="328.0" y="2199.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">+,-</text>
+<line x1="350" y1="2194" x2="380" y2="2194" stroke="#333"/>
+<rect x="380" y="2180" width="44" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="402.0" y="2199.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">cmp</text>
+<line x1="424" y1="2194" x2="454" y2="2194" stroke="#333"/>
+<rect x="454" y="2180" width="36" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="472.0" y="2199.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">&&</text>
+<line x1="490" y1="2194" x2="520" y2="2194" stroke="#333"/>
+<rect x="520" y="2180" width="36" height="28" rx="6" ry="6" fill="#fff" stroke="#333" /><text x="538.0" y="2199.0" font-family="Inter,Arial" font-size="14" text-anchor="middle">||</text>
+<line x1="556" y1="2194" x2="586" y2="2194" stroke="#333"/>
+<circle cx="586" cy="2194" r="4" fill="#333"/></g><text x="20" y="2178" font-family="Inter,Arial" font-weight="bold">expr</text>
+  </svg>
+  <h2>EBNF (subset)</h2>
+  <pre>program       = entry_block , { declaration | statement } ;
+entry_block   = ("@main" | "@entry_point") , block ;
+block         = "{" , { declaration | statement } , "}" ;
+
+declaration   = function_decl | worker_decl | let_decl | module_decl | export_decl | import_decl ;
+function_decl = "function" , "$" , ident , "(" , [ param , { "," , param } ] , ")" , [ ":" , type ] , block ;
+worker_decl   = "worker" , "$" , ident , "(" , [ param , { "," , param } ] , ")" , block ;
+let_decl      = "let" , "$" , ident , ":" , type , ";" ;
+module_decl   = "@module" , string ;
+export_decl   = "@export" , "$" , ident ;
+import_decl   = "@import" , string , [ "as" , "$" , ident ] ;
+
+statement     = shortcode | longform | control | io | chan | label | goto ;
+shortcode     = "#init" "$" ident
+              | "#load" "$" ident "," value
+              | "#call" "$" ident [ "," "$" ident ]
+              | "#exit" ;
+longform      = "initialize" "capsule" "$" ident
+              | "assign" "value" value "to" "capsule" "$" ident
+              | "invoke" "function" "$" ident [ "with" "capsule" "$" ident ]
+              | "terminate" "execution" ;
+control       = "#if" "(" expr ")" block [ "#else" block ] "#endif"
+              | "#loop" "(" expr ")" block ;
+io            = "#render" "$" ident | "#input" "$" ident | "#output" "$" ident ;
+chan          = "#send" "$" ident "," "$" ident | "#recv" "$" ident "," "$" ident ;
+label         = ":" ident ;
+goto          = "goto" ":" ident ;
+
+expr          = or_expr ;
+or_expr       = and_expr , { "||" , and_expr } ;
+and_expr      = eq_expr , { "&&" , eq_expr } ;
+eq_expr       = rel_expr , { ("=="|"!=") , rel_expr } ;
+rel_expr      = add_expr , { ("<"|">"|"<="|">=") , add_expr } ;
+add_expr      = mul_expr , { ("+"|"-") , mul_expr } ;
+mul_expr      = unary_expr , { ("*"|"/"|"%") , unary_expr } ;
+unary_expr    = [ "!" | "~" | "-" ] , primary ;
+primary       = int | hex | duration | string | bool
+              | "$" ident
+              | ident
+              | "(" , expr , ")" ;
+</pre>
+</div>
+</body>
+</html>
