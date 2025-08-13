@@ -118,3 +118,34 @@ type out\a.text.hex
 type out\a.dis.txt
 ```
 
+ Build commands that match your toolchain
+MinGW-w64 / GCC (Windows or Linux):
+
+cmd
+
+g++ -std=gnu++17 -O2 eminorcc.cpp -o eminorcc.exe
+If your GCC is < 9, link the filesystem library explicitly:
+
+cmd
+
+g++ -std=gnu++17 -O2 eminorcc.cpp -o eminorcc.exe -lstdc++fs
+Clang (macOS/Linux):
+
+bash
+
+clang++ -std=c++17 -O2 eminorcc.cpp -o eminorcc
+MSVC (Visual Studio “x64 Native Tools” prompt):
+
+cmd
+
+cl /std:c++17 /O2 /EHsc eminorcc.cpp /Fe:eminorcc.exe
+If your MSVC only has the experimental TS, the alias block above will automatically use
+std::experimental::filesystem.
+
+Quick smoke test
+cmd
+
+echo @main { #init $A0 #load $A0, 0xFF #call render, $A0 #exit } > hello.eminor
+eminorcc.exe hello.eminor -o out
+type out\a.text.hex
+type out\a.dis.txt
