@@ -2832,3 +2832,1311 @@ def parse_longform_load_stmt(self):
         value=value
     )
 
+#!/usr/bin/env python3
+# E Minor v1.0 — Star-Code Validator
+# Performs AOT validations on the AST produced by eminor_parser.py
+
+import sys, json
+from typing import List, Dict, Any, Optional
+
+def _walk(node, fn):
+    if isinstance(node, dict):
+        fn(node)
+        for k, v in node.items():
+            if isinstance(v, (dict, list)):
+                _walk(v, fn)
+    elif isinstance(node, list):
+        for x in node: _walk(x, fn)
+
+SEVERITY = {"ERROR":"ERROR","WARN":"WARN","INFO":"INFO"}
+
+def validate(ast: Dict[str, Any]) -> List[Dict[str, Any]]:
+    issues: List[Dict[str, Any]] = []
+    declared_caps = set()   # from LetDecl
+    inited_caps   = set()   # after InitStmt
+    leased_caps   = set()   # after Lease/Sublease/Release
+    labels        = set()   # defined labels
+    gotos         = []      # (label, line, col)
+
+    # First pass: collect labels and lets
+    def pass1(n):
+        if n.get("_type") == "LetDecl":
+            name = n["name"]["name"]
+            declared_caps.add(name)
+        elif n.get("_type") == "LabelStmt":
+            labels.add(n["name"])
+
+    _walk(ast, pass1)
+
+    def report(kind, msg, line, col, code):
+        issues.append({"severity":kind,"code":code,"message":msg,"line":line,"column":col})
+
+    # Second pass: validations
+    def pass2(n):
+        t = n.get("_type")
+        if t == "InitStmt":
+            name = n["target"]["name"]
+            inited_caps.add(name)
+        elif t in ("LoadStmt","RenderStmt","InputStmt","OutputStmt","StampStmt","ExpireStmt"):
+            name = n["target"]["name"]
+            if name not in inited_caps and name not in declared_caps:
+                report(SEVERITY["WARN"], f"Capsule ${name} used before init/let", n["line"], n["column"], "SC001")
+        elif t in ("SendStmt","RecvStmt"):
+            a = n["chan"]["name"]; b = n["pkt"]["name"]
+            if a not in inited_caps and a not in declared_caps:
+                report(SEVERITY["WARN"], f"Channel ${a} used before init/let", n["line"], n["column"], "SC002")
+            if b not in inited_caps and b not in declared_caps:
+                report(SEVERITY["WARN"], f"Packet ${b} used before init/let", n["line"], n["column"], "SC003")
+        elif t == "LeaseStmt":
+            nm = n["target"]["name"]
+            if nm in leased_caps:
+                report(SEVERITY["ERROR"], f"Capsule ${nm} double-lease without release", n["line"], n["column"], "SC010")
+            leased_caps.add(nm)
+        elif t in ("SubleaseStmt",):
+            nm = n["target"]["name"]
+            if nm not in leased_caps:
+                report(SEVERITY["WARN"], f"Sublease on non-leased capsule ${nm}", n["line"], n["column"], "SC011")
+        elif t == "ReleaseStmt":
+            nm = n["target"]["name"]
+            if nm not in leased_caps:
+                report(SEVERITY["WARN"], f"Release on non-leased capsule ${nm}", n["line"], n["column"], "SC012")
+            leased_caps.discard(nm)
+        elif t == "SleepStmt":
+            # duration must be integer nanoseconds
+            dur = n["duration"]["value"]
+            if not isinstance(dur, int) or dur < 0:
+                report(SEVERITY["ERROR"], "Sleep duration must be non-negative integer nanoseconds", n["line"], n["column"], "SC020")
+        elif t == "ExpireStmt":
+            dur = n["duration"]["value"]
+            if not isinstance(dur, int) or dur < 0:
+                report(SEVERITY["ERROR"], "Expire duration must be non-negative integer nanoseconds", n["line"], n["column"], "SC021")
+        elif t == "GotoStmt":
+            gotos.append((n["label"], n["line"], n["column"]))
+        elif t == "IfStmt":
+            # shallow type-ish check: cond should be literal bool or an expression (assume ok); warn if literal non-bool
+            c = n["cond"]
+            if c.get("_type") == "Literal" and c.get("kind") != "BOOL":
+                report(SEVERITY["WARN"], "Non-boolean literal used as condition", n["line"], n["column"], "SC030")
+
+    _walk(ast, pass2)
+
+    # Post: check gotos
+    for label, line, col in gotos:
+        if label not in labels:
+            report(SEVERITY["ERROR"], f"goto :{label} targets undefined label", line, col, "SC040")
+
+    return issues
+
+def main():
+    import argparse
+    ap = argparse.ArgumentParser(description="E Minor Star-Code Validator")
+    ap.add_argument("ast_json", help="path to AST JSON (from eminor_parser.py)")
+    args = ap.parse_args()
+    with open(args.ast_json, "r", encoding="utf-8") as f:
+        ast = json.load(f)
+    issues = validate(ast)
+    print(json.dumps({"issues": issues}, indent=2))
+
+if __name__ == "__main__":
+    main()
+
+    #!/usr/bin/env python3
+# E Minor v1.0 — Full-Language Parser (recursive descent)
+# Consumes tokens from eminor_lexer[._megalithic] and emits AST JSON.
+# Usage:
+#   python eminor_parser.py <file> [--pretty]
+#   echo "@main { #exit }" | python eminor_parser.py - --pretty
+
+import sys, json
+from dataclasses import dataclass, field
+from typing import List, Optional, Union, Any
+
+# Import the lexer (expect eminor_lexer.py in same directory)
+try:
+    import eminor_lexer as lex
+except Exception:
+    import eminor_lexer_megalithic as lex
+
+# --------------- AST Nodes ---------------
+
+@dataclass
+class Node:
+    line: int
+    column: int
+    def to_json(self) -> dict:
+        d = {"_type": self.__class__.__name__}
+        for k, v in self.__dict__.items():
+            if k in ("line","column"): d[k]=v
+            else: d[k]=_to_json(v)
+        return d
+
+def _to_json(v: Any) -> Any:
+    if isinstance(v, Node):
+        return v.to_json()
+    if isinstance(v, list):
+        return [_to_json(x) for x in v]
+    if isinstance(v, dict):
+        return {k: _to_json(val) for k, val in v.items()}
+    return v
+
+# Expr
+@dataclass
+class Expr(Node): pass
+
+@dataclass
+class Literal(Expr):
+    kind: str
+    value: Any
+
+@dataclass
+class Identifier(Expr):
+    name: str
+    is_dollar: bool = False
+
+@dataclass
+class UnaryOp(Expr):
+    op: str
+    rhs: Expr
+
+@dataclass
+class BinaryOp(Expr):
+    op: str
+    lhs: Expr
+    rhs: Expr
+
+# Program / Blocks
+@dataclass
+class Program(Node):
+    entry: "EntryBlock"
+    items: List[Union["Decl","Stmt"]] = field(default_factory=list)
+
+@dataclass
+class EntryBlock(Node):
+    kind: str
+    block: "Block"
+
+@dataclass
+class Block(Node):
+    items: List[Union["Decl","Stmt"]]
+
+# Declarations
+@dataclass
+class Decl(Node): pass
+
+@dataclass
+class FunctionDecl(Decl):
+    name: Identifier
+    params: List["Param"]
+    return_type: Optional["TypeRef"]
+    body: Block
+
+@dataclass
+class WorkerDecl(Decl):
+    name: Identifier
+    params: List["Param"]
+    body: Block
+
+@dataclass
+class LetDecl(Decl):
+    name: Identifier
+    type_ref: "TypeRef"
+
+@dataclass
+class ModuleDecl(Decl):
+    path: str
+
+@dataclass
+class ExportDecl(Decl):
+    symbol: Identifier
+
+@dataclass
+class ImportDecl(Decl):
+    path: str
+    alias: Optional[Identifier]
+
+@dataclass
+class Param(Node):
+    name: Identifier
+    type_ref: "TypeRef"
+
+@dataclass
+class TypeRef(Node):
+    kind: str
+    name: Optional[str] = None
+    inner: Optional["TypeRef"] = None
+    size: Optional[int] = None
+
+# Statements
+@dataclass
+class Stmt(Node): pass
+
+@dataclass
+class InitStmt(Stmt):      target: Identifier
+@dataclass
+class LoadStmt(Stmt):      target: Identifier; value: Expr
+@dataclass
+class CallStmt(Stmt):      func: Identifier; arg: Optional[Identifier]
+@dataclass
+class ExitStmt(Stmt):      pass
+@dataclass
+class LeaseStmt(Stmt):     target: Identifier
+@dataclass
+class SubleaseStmt(Stmt):  target: Identifier
+@dataclass
+class ReleaseStmt(Stmt):   target: Identifier
+@dataclass
+class CheckExpStmt(Stmt):  target: Identifier
+@dataclass
+class RenderStmt(Stmt):    target: Identifier
+@dataclass
+class InputStmt(Stmt):     target: Identifier
+@dataclass
+class OutputStmt(Stmt):    target: Identifier
+@dataclass
+class SendStmt(Stmt):      chan: Identifier; pkt: Identifier
+@dataclass
+class RecvStmt(Stmt):      chan: Identifier; pkt: Identifier
+@dataclass
+class SpawnStmt(Stmt):     func: Identifier; args: List[Union[Expr, Identifier]]
+@dataclass
+class JoinStmt(Stmt):      thread: Identifier
+@dataclass
+class StampStmt(Stmt):     target: Identifier; value: Expr
+@dataclass
+class ExpireStmt(Stmt):    target: Identifier; duration: Literal
+@dataclass
+class SleepStmt(Stmt):     duration: Literal
+@dataclass
+class YieldStmt(Stmt):     pass
+@dataclass
+class ErrorStmt(Stmt):     target: Identifier; code: Expr; message: Literal
+@dataclass
+class IfStmt(Stmt):        cond: Expr; then_block: Block; else_block: Optional[Block]
+@dataclass
+class LoopStmt(Stmt):      cond: Expr; body: Block
+@dataclass
+class BreakStmt(Stmt):     pass
+@dataclass
+class ContinueStmt(Stmt):  pass
+@dataclass
+class GotoStmt(Stmt):      label: str
+@dataclass
+class LabelStmt(Stmt):     name: str
+
+# --------------- Parser ---------------
+
+class ParserError(Exception): pass
+
+class Parser:
+    def __init__(self, tokens: List[lex.Token]):
+        self.toks = tokens
+        self.i = 0
+
+    def _eof(self) -> bool:
+        return self.i >= len(self.toks)
+    def _peek(self, k=0):
+        j = self.i + k
+        return self.toks[j] if j < len(self.toks) else None
+    def _advance(self):
+        t = self._peek()
+        if t is None: raise ParserError("Unexpected end of input")
+        self.i += 1
+        return t
+    def _match_kind(self, *kinds):
+        t = self._peek()
+        if t and t.kind in kinds:
+            return self._advance()
+        return None
+    def _expect(self, *kinds):
+        t = self._peek()
+        if not t or t.kind not in kinds:
+            exp = " or ".join(kinds)
+            got = (t.kind if t else "EOF")
+            loc = f" at {t.line}:{t.column}" if t else ""
+            raise ParserError(f"Expected {exp} but got {got}{loc}")
+        return self._advance()
+
+    # program
+    def parse_program(self) -> Program:
+        entry = self.parse_entry_block()
+        items = []
+        while not self._eof():
+            t = self._peek()
+            if t.kind in ("KW_FUNCTION","KW_WORKER","KW_LET","AT_MODULE","AT_EXPORT","AT_IMPORT"):
+                items.append(self.parse_decl())
+            else:
+                items.append(self.parse_statement())
+        return Program(line=entry.line, column=entry.column, entry=entry, items=items)
+
+    def parse_entry_block(self) -> EntryBlock:
+        t = self._expect("AT_MAIN","AT_ENTRY_POINT")
+        blk = self.parse_block()
+        return EntryBlock(line=t.line, column=t.column, kind=t.kind, block=blk)
+
+    def parse_block(self) -> Block:
+        lb = self._expect("LBRACE")
+        items = []
+        while True:
+            t = self._peek()
+            if not t: raise ParserError(f"Unterminated block starting at {lb.line}:{lb.column}")
+            if t.kind == "RBRACE":
+                self._advance(); break
+            if t.kind in ("KW_FUNCTION","KW_WORKER","KW_LET","AT_MODULE","AT_EXPORT","AT_IMPORT"):
+                items.append(self.parse_decl())
+            else:
+                items.append(self.parse_statement())
+        return Block(line=lb.line, column=lb.column, items=items)
+
+    # decls
+    def parse_decl(self) -> Decl:
+        t = self._peek()
+        if t.kind == "KW_FUNCTION": return self.parse_function_decl()
+        if t.kind == "KW_WORKER":   return self.parse_worker_decl()
+        if t.kind == "KW_LET":      return self.parse_let_decl()
+        if t.kind == "AT_MODULE":
+            at=self._advance(); s=self._expect("STRING")
+            return ModuleDecl(line=at.line, column=at.column, path=s.value)
+        if t.kind == "AT_EXPORT":
+            at=self._advance()
+            if self._match_kind("KW_FUNCTION"):
+                pass
+            sym = self.parse_func_id()
+            return ExportDecl(line=at.line, column=at.column, symbol=sym)
+        if t.kind == "AT_IMPORT":
+            at=self._advance(); s=self._expect("STRING")
+            alias=None
+            if self._peek() and self._peek().kind=="IDENT" and self._peek().lexeme=="as":
+                self._advance()
+                alias=self.parse_func_id()
+            return ImportDecl(line=at.line, column=at.column, path=s.value, alias=alias)
+        raise ParserError(f"Unknown declaration start: {t.kind} at {t.line}:{t.column}")
+
+    def parse_function_decl(self) -> FunctionDecl:
+        kw=self._expect("KW_FUNCTION")
+        name=self.parse_func_id()
+        self._expect("LPAREN")
+        params=[]
+        if not self._match_kind("RPAREN"):
+            params.append(self.parse_param())
+            while self._match_kind("COMMA"):
+                params.append(self.parse_param())
+            self._expect("RPAREN")
+        ret_type=None
+        if self._match_kind("COLON"):
+            ret_type=self.parse_type()
+        body=self.parse_block()
+        return FunctionDecl(line=kw.line, column=kw.column, name=name, params=params, return_type=ret_type, body=body)
+
+    def parse_worker_decl(self) -> WorkerDecl:
+        kw=self._expect("KW_WORKER")
+        name=self.parse_func_id()
+        self._expect("LPAREN")
+        params=[]
+        if not self._match_kind("RPAREN"):
+            params.append(self.parse_param())
+            while self._match_kind("COMMA"):
+                params.append(self.parse_param())
+            self._expect("RPAREN")
+        body=self.parse_block()
+        return WorkerDecl(line=kw.line, column=kw.column, name=name, params=params, body=body)
+
+    def parse_let_decl(self) -> LetDecl:
+        kw=self._expect("KW_LET")
+        name=self.parse_capsule_id()
+        self._expect("COLON")
+        typ=self.parse_type()
+        self._expect("SEMICOLON")
+        return LetDecl(line=kw.line, column=kw.column, name=name, type_ref=typ)
+
+    def parse_param(self) -> Param:
+        name=self.parse_capsule_id()
+        self._expect("COLON")
+        typ=self.parse_type()
+        return Param(line=name.line, column=name.column, name=name, type_ref=typ)
+
+    def parse_type(self) -> TypeRef:
+        t=self._peek()
+        if t.kind == "KW_BYTE":
+            b=self._advance()
+            self._expect("LBRACKET")
+            sz=self._expect("INT")
+            self._expect("RBRACKET")
+            return TypeRef(line=b.line, column=b.column, kind="byte_array", size=sz.value)
+        # capsule<...> or packet<...>
+        if t.kind in ("KW_CAPSULE","KW_PACKET") or (t.kind=="IDENT" and t.lexeme=="packet"):
+            head=self._advance()
+            self._expect("LT")
+            inner=self.parse_type()
+            self._expect("GT")
+            return TypeRef(line=head.line, column=head.column, kind=head.lexeme, inner=inner)
+        # primitives
+        if t.kind in ("KW_U8","KW_U16","KW_U32","KW_U64","KW_I8","KW_I16","KW_I32","KW_I64","KW_F32","KW_F64","KW_BOOL","KW_STAMP","KW_DURATION"):
+            tok=self._advance()
+            return TypeRef(line=tok.line, column=tok.column, kind="prim", name=tok.lexeme)
+        raise ParserError(f"Expected type but got {t.kind} at {t.line}:{t.column}")
+
+    def parse_capsule_id(self) -> Identifier:
+        t=self._expect("DOLLAR_IDENT")
+        return Identifier(line=t.line, column=t.column, name=t.value, is_dollar=True)
+    def parse_func_id(self) -> Identifier:
+        t=self._expect("DOLLAR_IDENT")
+        return Identifier(line=t.line, column=t.column, name=t.value, is_dollar=True)
+
+    # statements
+    def parse_statement(self) -> Stmt:
+        t=self._peek()
+        k=t.kind
+        if k=="COLON":
+            c=self._advance(); ident=self._expect("IDENT")
+            return LabelStmt(line=c.line, column=c.column, name=ident.lexeme)
+
+        # Shortcode
+        if k=="HASH_INIT":      return self._stmt_unary(InitStmt)
+        if k=="HASH_LOAD":      return self._stmt_load()
+        if k=="HASH_CALL":      return self._stmt_call()
+        if k=="HASH_EXIT":      return self._mk(ExitStmt, t)
+        if k=="HASH_LEASE":     return self._stmt_unary(LeaseStmt)
+        if k=="HASH_SUBLEASE":  return self._stmt_unary(SubleaseStmt)
+        if k=="HASH_RELEASE":   return self._stmt_unary(ReleaseStmt)
+        if k=="HASH_CHECK_EXP": return self._stmt_unary(CheckExpStmt)
+        if k=="HASH_RENDER":    return self._stmt_unary(RenderStmt)
+        if k=="HASH_INPUT":     return self._stmt_unary(InputStmt)
+        if k=="HASH_OUTPUT":    return self._stmt_unary(OutputStmt)
+        if k=="HASH_SEND":      return self._stmt_chan(SendStmt)
+        if k=="HASH_RECV":      return self._stmt_chan(RecvStmt)
+        if k=="HASH_SPAWN":     return self._stmt_spawn()
+        if k=="HASH_JOIN":      return self._stmt_unary2(JoinStmt, "thread")
+        if k=="HASH_STAMP":     return self._stmt_value(StampStmt)
+        if k=="HASH_EXPIRE":    return self._stmt_duration(ExpireStmt)
+        if k=="HASH_SLEEP":     return self._stmt_sleep()
+        if k=="HASH_YIELD":     return self._mk(YieldStmt, t)
+        if k=="HASH_ERROR":     return self._stmt_error()
+        if k=="HASH_IF":        return self._stmt_if()
+        if k=="HASH_LOOP":      return self._stmt_loop()
+        if k=="HASH_BREAK":     return self._mk(BreakStmt, t)
+        if k=="HASH_CONTINUE":  return self._mk(ContinueStmt, t)
+
+        # Long-form
+        if k=="KW_INITIALIZE":
+            init_kw=self._advance(); self._expect("KW_CAPSULE")
+            target=self.parse_capsule_id()
+            return InitStmt(line=init_kw.line, column=init_kw.column, target=target)
+        if k=="KW_ASSIGN":
+            a=self._advance(); self._expect("KW_VALUE")
+            val=self.parse_value_expr()
+            self._expect("KW_TO"); self._expect("KW_CAPSULE")
+            target=self.parse_capsule_id()
+            return LoadStmt(line=a.line, column=a.column, target=target, value=val)
+        if k=="KW_INVOKE":
+            inv=self._advance(); self._expect("KW_FUNCTION")
+            fn=self.parse_func_id(); arg=None
+            if self._match_kind("KW_WITH"):
+                self._expect("KW_CAPSULE")
+                arg=self.parse_capsule_id()
+            return CallStmt(line=inv.line, column=inv.column, func=fn, arg=arg)
+        if k=="KW_TERMINATE":
+            tr=self._advance(); self._expect("KW_EXECUTION")
+            return ExitStmt(line=tr.line, column=tr.column)
+
+        if k=="KW_GOTO":
+            g=self._advance(); self._expect("COLON")
+            ident=self._expect("IDENT")
+            return GotoStmt(line=g.line, column=g.column, label=ident.lexeme)
+
+        raise ParserError(f"Unknown statement start {k} at {t.line}:{t.column}")
+
+    def _mk(self, cls, tok): self._advance(); return cls(line=tok.line, column=tok.column)
+    def _stmt_unary(self, cls):
+        t=self._advance(); cap=self.parse_capsule_id(); return cls(line=t.line, column=t.column, target=cap)
+    def _stmt_unary2(self, cls, field):
+        t=self._advance(); cap=self.parse_capsule_id(); return cls(line=t.line, column=t.column, **{field: cap})
+    def _stmt_load(self) -> LoadStmt:
+        t=self._expect("HASH_LOAD"); cap=self.parse_capsule_id(); self._expect("COMMA"); val=self.parse_value_expr()
+        return LoadStmt(line=t.line, column=t.column, target=cap, value=val)
+    def _stmt_call(self) -> CallStmt:
+        t=self._expect("HASH_CALL"); fn=self.parse_func_id(); arg=None
+        if self._match_kind("COMMA"): arg=self.parse_capsule_id()
+        return CallStmt(line=t.line, column=t.column, func=fn, arg=arg)
+    def _stmt_chan(self, cls):
+        t=self._advance(); a=self.parse_capsule_id(); self._expect("COMMA"); b=self.parse_capsule_id()
+        if cls is SendStmt: return SendStmt(line=t.line, column=t.column, chan=a, pkt=b)
+        return RecvStmt(line=t.line, column=t.column, chan=a, pkt=b)
+    def _stmt_spawn(self) -> SpawnStmt:
+        t=self._expect("HASH_SPAWN"); fn=self.parse_func_id(); args=[]
+        if self._match_kind("COMMA"):
+            args.append(self.parse_arg())
+            while self._match_kind("COMMA"):
+                args.append(self.parse_arg())
+        return SpawnStmt(line=t.line, column=t.column, func=fn, args=args)
+    def _stmt_value(self, cls):
+        t=self._advance(); cap=self.parse_capsule_id(); self._expect("COMMA"); val=self.parse_value_expr()
+        if cls is StampStmt: return StampStmt(line=t.line, column=t.column, target=cap, value=val)
+        raise ParserError("Unsupported _stmt_value class")
+    def _stmt_duration(self, cls):
+        t=self._advance(); cap=self.parse_capsule_id(); self._expect("COMMA"); dur=self._expect("DURATION")
+        lit=Literal(line=dur.line, column=dur.column, kind="DURATION", value=dur.value)
+        return ExpireStmt(line=t.line, column=t.column, target=cap, duration=lit)
+    def _stmt_sleep(self) -> SleepStmt:
+        t=self._expect("HASH_SLEEP"); dur=self._expect("DURATION")
+        return SleepStmt(line=t.line, column=t.column, duration=Literal(line=dur.line, column=dur.column, kind="DURATION", value=dur.value))
+    def _stmt_error(self) -> ErrorStmt:
+        t=self._expect("HASH_ERROR"); cap=self.parse_capsule_id(); self._expect("COMMA"); code=self.parse_value_expr(); self._expect("COMMA"); msg=self._expect("STRING")
+        return ErrorStmt(line=t.line, column=t.column, target=cap, code=code, message=Literal(line=msg.line, column=msg.column, kind="STRING", value=msg.value))
+    def _stmt_if(self) -> IfStmt:
+        it=self._expect("HASH_IF"); self._expect("LPAREN"); cond=self.parse_expr(); self._expect("RPAREN"); then_block=self.parse_block()
+        else_block=None
+        if self._match_kind("HASH_ELSE"): else_block=self.parse_block()
+        self._expect("HASH_ENDIF")
+        return IfStmt(line=it.line, column=it.column, cond=cond, then_block=then_block, else_block=else_block)
+    def _stmt_loop(self) -> LoopStmt:
+        lt=self._expect("HASH_LOOP"); self._expect("LPAREN"); cond=self.parse_expr(); self._expect("RPAREN"); body=self.parse_block()
+        return LoopStmt(line=lt.line, column=lt.column, cond=cond, body=body)
+
+    def parse_arg(self):
+        t=self._peek()
+        if t.kind=="DOLLAR_IDENT": return self.parse_capsule_id()
+        if t.kind in ("INT","HEX","DURATION","STRING","BOOL"): return self.parse_value_expr()
+        return self.parse_expr()
+
+    def parse_value_expr(self) -> Literal:
+        t=self._peek()
+        if t.kind in ("INT","HEX","DURATION","STRING","BOOL"):
+            tok=self._advance()
+            return Literal(line=tok.line, column=tok.column, kind=tok.kind, value=tok.value)
+        return self.parse_expr()
+
+    # Expressions (precedence)
+    def parse_expr(self) -> Expr: return self._parse_or()
+    def _parse_or(self) -> Expr:
+        left=self._parse_and()
+        while self._match_kind("OROR"):
+            right=self._parse_and(); left=BinaryOp(line=left.line, column=left.column, op="||", lhs=left, rhs=right)
+        return left
+    def _parse_and(self) -> Expr:
+        left=self._parse_eq()
+        while self._match_kind("ANDAND"):
+            right=self._parse_eq(); left=BinaryOp(line=left.line, column=left.column, op="&&", lhs=left, rhs=right)
+        return left
+    def _parse_eq(self) -> Expr:
+        left=self._parse_rel()
+        while True:
+            if self._match_kind("EQEQ"):   right=self._parse_rel(); left=BinaryOp(line=left.line, column=left.column, op="==", lhs=left, rhs=right)
+            elif self._match_kind("BANGEQ"): right=self._parse_rel(); left=BinaryOp(line=left.line, column=left.column, op="!=", lhs=left, rhs=right)
+            else: break
+        return left
+    def _parse_rel(self) -> Expr:
+        left=self._parse_add()
+        while True:
+            if self._match_kind("LT"):   right=self._parse_add(); left=BinaryOp(line=left.line, column=left.column, op="<", lhs=left, rhs=right)
+            elif self._match_kind("GT"): right=self._parse_add(); left=BinaryOp(line=left.line, column=left.column, op=">", lhs=left, rhs=right)
+            elif self._match_kind("LTE"): right=self._parse_add(); left=BinaryOp(line=left.line, column=left.column, op="<=", lhs=left, rhs=right)
+            elif self._match_kind("GTE"): right=self._parse_add(); left=BinaryOp(line=left.line, column=left.column, op=">=", lhs=left, rhs=right)
+            else: break
+        return left
+    def _parse_add(self) -> Expr:
+        left=self._parse_mul()
+        while True:
+            if self._match_kind("PLUS"):  right=self._parse_mul(); left=BinaryOp(line=left.line, column=left.column, op="+", lhs=left, rhs=right)
+            elif self._match_kind("MINUS"): right=self._parse_mul(); left=BinaryOp(line=left.line, column=left.column, op="-", lhs=left, rhs=right)
+            else: break
+        return left
+    def _parse_mul(self) -> Expr:
+        left=self._parse_unary()
+        while True:
+            if self._match_kind("STAR"): right=self._parse_unary(); left=BinaryOp(line=left.line, column=left.column, op="*", lhs=left, rhs=right)
+            elif self._match_kind("SLASH"): right=self._parse_unary(); left=BinaryOp(line=left.line, column=left.column, op="/", lhs=left, rhs=right)
+            elif self._match_kind("PERCENT"): right=self._parse_unary(); left=BinaryOp(line=left.line, column=left.column, op="%", lhs=left, rhs=right)
+            else: break
+        return left
+    def _parse_unary(self) -> Expr:
+        if self._match_kind("BANG"):
+            rhs=self._parse_unary(); return UnaryOp(line=rhs.line, column=rhs.column, op="!", rhs=rhs)
+        if self._match_kind("TILDE"):
+            rhs=self._parse_unary(); return UnaryOp(line=rhs.line, column=rhs.column, op="~", rhs=rhs)
+        if self._match_kind("MINUS"):
+            rhs=self._parse_unary(); return UnaryOp(line=rhs.line, column=rhs.column, op="u-", rhs=rhs)
+        return self._parse_primary()
+    def _parse_primary(self) -> Expr:
+        t=self._peek()
+        if t.kind in ("INT","HEX","DURATION","STRING","BOOL"):
+            tok=self._advance(); return Literal(line=tok.line, column=tok.column, kind=tok.kind, value=tok.value)
+        if t.kind=="DOLLAR_IDENT":
+            tok=self._advance(); return Identifier(line=tok.line, column=tok.column, name=tok.value, is_dollar=True)
+        if t.kind=="IDENT":
+            tok=self._advance(); return Identifier(line=tok.line, column=tok.column, name=tok.lexeme, is_dollar=False)
+        if t.kind=="LPAREN":
+            self._advance(); e=self.parse_expr(); self._expect("RPAREN"); return e
+        raise ParserError(f"Expected expression but got {t.kind} at {t.line}:{t.column}")
+
+def parse_source_to_ast_json(text: str) -> dict:
+    lx=lex.Lexer(text); toks=lx.tokenize(); p=Parser(toks); ast=p.parse_program(); return ast.to_json()
+
+def main():
+    import argparse
+    ap=argparse.ArgumentParser(description="E Minor v1.0 Parser → AST JSON")
+    ap.add_argument("file", help="source path or '-'")
+    ap.add_argument("--pretty", action="store_true")
+    args=ap.parse_args()
+    if args.file == "-": src=sys.stdin.read()
+    else:
+        with open(args.file,"r",encoding="utf-8") as f: src=f.read()
+    try:
+        out=parse_source_to_ast_json(src)
+        if args.pretty: print(json.dumps(out, indent=2))
+        else: print(json.dumps(out, separators=(",",":")))
+    except (ParserError, lex.LexerError) as e:
+        print(json.dumps({"error": str(e)}), file=sys.stderr); sys.exit(1)
+
+if __name__=="__main__":
+    main()
+
+    #!/usr/bin/env python3
+# E Minor v1.0 — Official FULL-LANGUAGE Lexer (Megalithic-Optimized)
+# Drop-in replacement for eminor_lexer.py
+# Usage (compatible):
+#   python eminor_lexer.py <file>            # JSON (pretty)
+#   echo '...' | python eminor_lexer.py -    # read stdin
+# Extras (optional):
+#   --emit=ndjson | --emit=json  (default=json)
+#   --validate-only              (scan only, no token materialization)
+
+import sys, json
+
+# === Tables (hot path; kept at module scope for fast locals binding) ===
+EMINOR_KEYWORDS = {
+    "initialize":"KW_INITIALIZE","capsule":"KW_CAPSULE","assign":"KW_ASSIGN","value":"KW_VALUE","to":"KW_TO",
+    "invoke":"KW_INVOKE","function":"KW_FUNCTION","with":"KW_WITH","terminate":"KW_TERMINATE","execution":"KW_EXECUTION",
+    "if":"KW_IF","else":"KW_ELSE","loop":"KW_LOOP","goto":"KW_GOTO",
+    "u8":"KW_U8","u16":"KW_U16","u32":"KW_U32","u64":"KW_U64",
+    "i8":"KW_I8","i16":"KW_I16","i32":"KW_I32","i64":"KW_I64",
+    "f32":"KW_F32","f64":"KW_F64","bool":"KW_BOOL","stamp":"KW_STAMP","duration":"KW_DURATION","byte":"KW_BYTE",
+    "worker":"KW_WORKER","let":"KW_LET","true":"KW_TRUE","false":"KW_FALSE",
+    "main":"KW_MAIN","entry_point":"KW_ENTRY_POINT","module":"KW_MODULE","export":"KW_EXPORT","import":"KW_IMPORT",
+    "ns":"KW_NS","ms":"KW_MS","s":"KW_S","m":"KW_M","h":"KW_H",
+}
+KW_BOOL_LIT = {"true": True, "false": False}
+
+HASH_DIRECTIVES = {
+    "init":"HASH_INIT","load":"HASH_LOAD","call":"HASH_CALL","exit":"HASH_EXIT",
+    "lease":"HASH_LEASE","sublease":"HASH_SUBLEASE","release":"HASH_RELEASE","check_exp":"HASH_CHECK_EXP",
+    "render":"HASH_RENDER","input":"HASH_INPUT","output":"HASH_OUTPUT",
+    "send":"HASH_SEND","recv":"HASH_RECV","spawn":"HASH_SPAWN","join":"HASH_JOIN",
+    "stamp":"HASH_STAMP","expire":"HASH_EXPIRE","sleep":"HASH_SLEEP","yield":"HASH_YIELD",
+    "error":"HASH_ERROR","if":"HASH_IF","else":"HASH_ELSE","endif":"HASH_ENDIF",
+    "loop":"HASH_LOOP","break":"HASH_BREAK","continue":"HASH_CONTINUE",
+}
+
+AT_DIRECTIVES = {"main":"AT_MAIN","entry_point":"AT_ENTRY_POINT","module":"AT_MODULE","export":"AT_EXPORT","import":"AT_IMPORT"}
+
+OP2 = {'=':{'=':"EQEQ"}, '!':{'=':"BANGEQ"}, '<':{'=':"LTE",'<':"LSHIFT"}, '>':{'=':"GTE",'>':"RSHIFT"}, '&':{'&':"ANDAND"}, '|':{'|':"OROR"}}
+OP1 = {'=':"EQ", '<':"LT", '>':"GT", '+':"PLUS", '-':"MINUS", '*':"STAR", '/':"SLASH", '%':"PERCENT", '!':"BANG", '~':"TILDE",
+       '&':"AMP", '|':"BAR", '^':"CARET", '(':"LPAREN", ')':"RPAREN", '{':"LBRACE", '}':"RBRACE", '[':"LBRACKET", ']':"RBRACKET",
+       ',':"COMMA", ';':"SEMICOLON", ':':"COLON", '.':"DOT"}
+
+DUR_NS = {"ns":1, "ms":1_000_000, "s":1_000_000_000, "m":60*1_000_000_000, "h":60*60*1_000_000_000}
+
+HEX_SET = set("0123456789abcdefABCDEF")
+DIG_SET = set("0123456789")
+ID_SET_HEAD = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_")
+ID_SET_BODY = ID_SET_HEAD | DIG_SET
+
+class LexerError(Exception): pass
+
+class Token:
+    __slots__ = ("kind","lexeme","line","column","value")
+    def __init__(self, kind, lexeme, line, column, value=None):
+        self.kind=kind; self.lexeme=lexeme; self.line=line; self.column=column; self.value=value
+    def as_dict(self):
+        d={"kind":self.kind,"lexeme":self.lexeme,"line":self.line,"column":self.column}
+        if self.value is not None: d["value"]=self.value
+        return d
+    def as_nd(self):
+        if self.value is None: return f"{self.kind}\t{self.lexeme}\t{self.line}\t{self.column}"
+        return f"{self.kind}\t{self.lexeme}\t{self.line}\t{self.column}\t{self.value}"
+
+class Lexer:
+    __slots__ = ("s","n","i","line","col")
+    def __init__(self, text: str):
+        self.s=text; self.n=len(text); self.i=0; self.line=1; self.col=1
+
+    def _peek(self, k=0):
+        j=self.i+k
+        return self.s[j] if j<self.n else ""
+
+    def _adv(self):
+        ch=self.s[self.i]
+        if ch=="\n": self.line+=1; self.col=1
+        else: self.col+=1
+        self.i+=1
+        return ch
+
+    def _skip_ws_comments(self):
+        s=self.s; n=self.n; i=self.i; line=self.line; col=self.col
+        while i<n:
+            ch=s[i]
+            if ch in " \t\r\n":
+                if ch=="\n": line+=1; col=1
+                else: col+=1
+                i+=1; continue
+            if ch=='/' and i+1<n and s[i+1]=='/':
+                i+=2; col+=2
+                j=s.find('\n', i)
+                if j==-1:
+                    self.i=n; self.line=line; self.col=col+(n-i); return
+                line+=1; col=1; i=j+1; continue
+            if ch=='/' and i+1<n and s[i+1]=='*':
+                i+=2; col+=2
+                while i<n:
+                    if s[i]=='\n': line+=1; col=1; i+=1; continue
+                    if s[i]=='*' and i+1<n and s[i+1]=='/':
+                        i+=2; col+=2; break
+                    i+=1; col+=1
+                else:
+                    raise LexerError(f"Unterminated block comment at line {line}")
+                continue
+            break
+        self.i=i; self.line=line; self.col=col
+
+    def _read_ident_or_kw(self):
+        s=self.s; i=self.i; n=self.n; line=self.line; col=self.col
+        j=i
+        while j<n and s[j] in ID_SET_BODY: j+=1
+        ident=s[i:j]
+        self.i=j; self.col += (j-i)
+        if ident in ("true","false"):
+            return Token("BOOL", ident, line, col, ident=="true")
+        kind=EMINOR_KEYWORDS.get(ident)
+        if kind: return Token(kind, ident, line, col, None)
+        return Token("IDENT", ident, line, col, None)
+
+    def _read_dollar_ident(self):
+        line=self.line; col=self.col
+        self._adv()
+        ch=self._peek()
+        if not (ch and ch in ID_SET_HEAD):
+            raise LexerError(f"Invalid identifier after $ at {line}:{col}")
+        t=self._read_ident_or_kw()
+        return Token("DOLLAR_IDENT", "$"+t.lexeme, line, col, t.lexeme)
+
+    def _read_string(self):
+        line=self.line; col=self.col
+        assert self._adv()=='"'
+        s=self.s; i=self.i; n=self.n
+        out=[]
+        while i<n:
+            ch=s[i]
+            if ch=='"':
+                self.i=i+1; self.col += (i+1 - col)
+                lex='"'+''.join(out)+'"'
+                return Token("STRING", lex, line, col, ''.join(out))
+            if ch=='\\':
+                if i+1>=n: raise LexerError(f"Bad escape at {self.line}:{self.col}")
+                esc=s[i+1]
+                if esc=='n': out.append("\n"); i+=2
+                elif esc=='t': out.append("\t"); i+=2
+                elif esc=='"': out.append('"'); i+=2
+                elif esc=='\\': out.append("\\"); i+=2
+                elif esc=='x':
+                    if i+3>=n: raise LexerError(f"Bad \\x escape at {self.line}:{self.col}")
+                    h1=s[i+2]; h2=s[i+3]
+                    if h1 not in "0123456789abcdefABCDEF" or h2 not in "0123456789abcdefABCDEF":
+                        raise LexerError(f"Bad \\x escape at {self.line}:{self.col}")
+                    out.append(chr(int(h1+h2,16))); i+=4
+                else:
+                    raise LexerError(f"Unknown escape \\{esc} at {self.line}:{self.col}")
+                continue
+            out.append(ch); i+=1
+        raise LexerError(f"Unterminated string at {line}:{col}")
+
+    def _read_number_or_duration(self):
+        s=self.s; i=self.i; n=self.n; line=self.line; col=self.col
+        if i+1<n and s[i]=='0' and (s[i+1]=='x' or s[i+1]=='X'):
+            j=i+2
+            while j<n and s[j] in "0123456789abcdefABCDEF": j+=1
+            if j==i+2: raise LexerError(f"Invalid hex literal at {line}:{col}")
+            lex=s[i:j]; self.i=j; self.col += (j-i)
+            return Token("HEX", lex, line, col, int(lex[2:],16))
+        j=i
+        while j<n and s[j].isdigit(): j+=1
+        if j==i: raise LexerError(f"Invalid number at {line}:{col}")
+        num=s[i:j]; unit=""
+        if j<n:
+            c=s[j]
+            if c=='n' and j+1<n and s[j+1]=='s': unit="ns"; j+=2
+            elif c=='m' and j+1<n and s[j+1]=='s': unit="ms"; j+=2
+            elif c in "smh": unit=c; j+=1
+        lex=s[i:j]; self.i=j; self.col += (j-i)
+        if unit:
+            mult = 1 if unit=="ns" else (1_000_000 if unit=="ms" else (1_000_000_000 if unit=="s" else (60*1_000_000_000 if unit=="m" else 60*60*1_000_000_000)))
+            return Token("DURATION", lex, line, col, int(num)*mult)
+        return Token("INT", lex, line, col, int(num))
+
+    def _read_hash(self):
+        line=self.line; col=self.col
+        self._adv()
+        s=self.s; i=self.i; n=self.n; j=i
+        while j<n and (s[j].isalnum() or s[j]=='_'): j+=1
+        name=s[i:j]; self.i=j; self.col += (j-i)
+        if not name: return Token("HASH", "#", line, col, None)
+        kind=HASH_DIRECTIVES.get(name)
+        if not kind: raise LexerError(f"Unknown hash directive '#{name}' at {line}:{col}")
+        return Token(kind, "#"+name, line, col, None)
+
+    def _read_at(self):
+        line=self.line; col=self.col
+        self._adv()
+        s=self.s; i=self.i; n=self.n; j=i
+        while j<n and (s[j].isalnum() or s[j]=='_'): j+=1
+        name=s[i:j]; self.i=j; self.col += (j-i)
+        kind=AT_DIRECTIVES.get(name)
+        if not kind: raise LexerError(f"Unknown at-directive '@{name}' at {line}:{col}")
+        return Token(kind, "@"+name, line, col, None)
+
+    def _read_operator(self):
+        line=self.line; col=self.col; s=self.s; i=self.i; n=self.n
+        c1=s[i]
+        tab=OP2.get(c1)
+        if tab and i+1<n:
+            c2=s[i+1]; kind=tab.get(c2)
+            if kind:
+                self.i=i+2; self.col+=2
+                return Token(kind, c1+c2, line, col, None)
+        kind=OP1.get(c1)
+        if kind:
+            self.i=i+1; self.col+=1
+            return Token(kind, c1, line, col, None)
+        return None
+
+    def next_token(self):
+        self._skip_ws_comments()
+        if self.i>=self.n: return None
+        c=self._peek()
+        if c=='#': return self._read_hash()
+        if c=='@': return self._read_at()
+        if c=='"': return self._read_string()
+        if c=='$': return self._read_dollar_ident()
+        if c in OP1 or c in OP2:
+            tok=self._read_operator()
+            if tok: return tok
+        if c and c.isdigit(): return self._read_number_or_duration()
+        if c and (c in ID_SET_HEAD): return self._read_ident_or_kw()
+        raise LexerError(f"Unexpected character '{c}' at {self.line}:{self.col}")
+
+    def tokenize(self):
+        out=[]
+        while True:
+            t=self.next_token()
+            if t is None: break
+            out.append(t)
+        return out
+
+def tokens_to_json(tokens):
+    arr=[]
+    for t in tokens:
+        d=t.as_dict()
+        arr.append(d)
+    return arr
+
+def main():
+    import argparse
+    ap=argparse.ArgumentParser(description="E Minor v1.0 Lexer (Megalithic)")
+    ap.add_argument("file", help="file path or '-' for stdin")
+    ap.add_argument("--emit", choices=["json","ndjson"], default="json")
+    ap.add_argument("--validate-only", action="store_true")
+    args=ap.parse_args()
+
+    if args.file=="-":
+        src=sys.stdin.read()
+    else:
+        with open(args.file,"r",encoding="utf-8") as f:
+            src=f.read()
+    try:
+        lx=Lexer(src)
+        if args.validate_only:
+            lx.tokenize()  # run through tokens (materialized but OK)
+            print(json.dumps({"ok": True})); return
+        toks=lx.tokenize()
+        if args.emit=="json":
+            print(json.dumps(tokens_to_json(toks), indent=2))
+        else:
+            # NDJSON streaming
+            w=sys.stdout.write
+            for t in toks:
+                w(t.as_nd()+"\n")
+    except LexerError as e:
+        print(json.dumps({"error": str(e)}), file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+
+    #!/usr/bin/env python3
+# E Minor v1.0 — IR Emitter -> Hex Opcode Stream
+# Consumes E Minor source, runs parser and Star-Code checks, and emits:
+#   - .ir.hex (space-separated hex bytes)
+#   - .ir.bin (raw bytes)
+#   - .sym.json (symbols + constants + listing map)
+# Usage:
+#   python eminor_ir_emitter.py program.eminor
+#   echo "@main { #exit }" | python eminor_ir_emitter.py -
+
+import sys, json, struct, os, binascii
+from typing import Dict, Any, List, Tuple
+
+# Import parser and starcheck
+try:
+    import eminor_parser as parser_mod
+except Exception:
+    print(json.dumps({"error":"eminor_parser.py not found on sys.path"}), file=sys.stderr)
+    sys.exit(1)
+
+try:
+    import eminor_starcheck as starcheck
+except Exception:
+    from pathlib import Path
+    here = Path(__file__).parent
+    sys.path.append(str(here))
+    import eminor_starcheck as starcheck
+
+# ---------------- IR Spec (opcodes) ----------------
+OP = {
+    "NOP":0x00,
+    "INIT":0x01,
+    "LOAD":0x02,         # LOAD cap, const_index(u16)
+    "CALL":0x03,         # CALL func_index (u16)
+    "CALLA":0x04,        # CALLA func_index (u16), cap
+    "EXIT":0x05,
+
+    "LEASE":0x10, "SUBLEASE":0x11, "RELEASE":0x12, "CHECKEXP":0x13,
+    "RENDER":0x20, "INPUT":0x21, "OUTPUT":0x22,
+    "SEND":0x30, "RECV":0x31,
+    "SPAWN":0x40,        # SPAWN func_index(u16), argc(u8), [arg kind+payload]
+    "JOIN":0x41,         # JOIN thread cap
+    "STAMP":0x50, "EXPIRE":0x51, "SLEEP":0x52, "YIELD":0x53,
+    "ERROR":0x60,        # ERROR cap, code_kidx(u16), msg_kidx(u16)
+
+    "PUSHK":0x80,        # PUSH const_index(u16)
+    "PUSHCAP":0x82,      # PUSH capsule value (by id byte)
+    "UNOP":0x90,         # UNOP op_id(u8)
+    "BINOP":0x91,        # BINOP op_id(u8)
+
+    "JZ":0xA0, "JNZ":0xA1, "JMP":0xA2,
+
+    "END":0xFF,
+}
+# Binary op ids
+OPID = {
+    "||":1, "&&":2,
+    "==":3, "!=":4,
+    "<":5, ">":6, "<=":7, ">=":8,
+    "+":9, "-":10, "*":11, "/":12, "%":13,
+}
+UNID = {"!":1, "~":2, "u-":3}
+
+# Encoding helpers
+def u8(x): return x & 0xFF
+def u16(x): return (x>>8)&0xFF, x&0xFF
+
+def encode_capsule_id(name: str) -> int:
+    # Expect hex-like names (A0, B7, FF). If not hex-like, fall back to simple hash (stable).
+    try:
+        if len(name)==2 and all(c in "0123456789abcdefABCDEF" for c in name):
+            return int(name, 16) & 0xFF
+    except Exception:
+        pass
+    # Stable DJB2-style hash truncated
+    h=5381
+    for c in name: h=((h<<5)+h)+ord(c)
+    return h & 0xFF
+
+class ConstPool:
+    # kinds: INT, HEX, DURATION, STRING, BOOL
+    def __init__(self):
+        self.items: List[Tuple[str, Any]] = []
+        self.index: Dict[Tuple[str, Any], int] = {}
+    def idx(self, kind:str, value:Any) -> int:
+        key=(kind, value)
+        if key in self.index: return self.index[key]
+        i=len(self.items)
+        self.items.append(key)
+        self.index[key]=i
+        return i
+    def json(self):
+        return [{"kind":k,"value":v} for (k,v) in self.items]
+
+class Symtab:
+    # functions, labels, strings, etc.
+    def __init__(self):
+        self.func_index: Dict[str,int]={}
+        self.labels: Dict[str,int]={}
+        self.strings: Dict[str,int]={}
+    def func_idx(self, name:str)->int:
+        if name in self.func_index: return self.func_index[name]
+        i=len(self.func_index)
+        self.func_index[name]=i
+        return i
+
+class Emitter:
+    def __init__(self, ast: Dict[str,Any]):
+        self.ast=ast
+        self.consts=ConstPool()
+        self.syms=Symtab()
+        self.code: List[int]=[]
+        self.fixups: List[Tuple[int,str,str]]=[]  # (offset, kind, target)
+        self.label_stack: List[Tuple[str,int,int]]=[]  # (break_label, continue_label, depth)
+
+    def emit(self, b):
+        if isinstance(b, int): self.code.append(b&0xFF)
+        else: self.code.extend([x&0xFF for x in b])
+
+    def here(self)->int: return len(self.code)
+
+    def patch_rel16(self, at:int, target:int):
+        rel = target - (at+2)  # branch from end of imm16
+        self.code[at]   = (rel>>8)&0xFF
+        self.code[at+1] = rel&0xFF
+
+    def compile(self):
+        # entry block
+        entry = self.ast["entry"]
+        self.compile_block(entry["block"])
+        self.emit(OP["END"])
+        # resolve labels/calls
+        for (pos, kind, target) in self.fixups:
+            if kind=="label":
+                if target not in self.syms.labels: raise RuntimeError(f"Undefined label :{target}")
+                self.patch_rel16(pos, self.syms.labels[target])
+            elif kind=="func":
+                # function indices are already immediate; nothing to patch here (we used indices not addresses)
+                pass
+        return bytes(self.code)
+
+    # --- Blocks & items ---
+    def compile_block(self, blk):
+        for item in blk["items"]:
+            t=item["_type"]
+            if t.endswith("Decl"):
+                self.compile_decl(item)
+            else:
+                self.compile_stmt(item)
+
+    def compile_decl(self, decl):
+        t=decl["_type"]
+        if t=="FunctionDecl":
+            name = decl["name"]["name"]
+            idx = self.syms.func_idx(name)
+            # for v1, we inline function bodies after END? Keep simple: treat as stub; callable index only (no body)
+            # Future: store body offsets in sym.json for AOT link.
+            pass
+        elif t=="WorkerDecl":
+            name = decl["name"]["name"]
+            self.syms.func_idx(name)
+        elif t=="LabelStmt":
+            nm=decl["name"]
+            self.syms.labels[nm] = self.here()
+        else:
+            # let/module/export/import — no direct code emission
+            pass
+
+    # --- Statements ---
+    def compile_stmt(self, s):
+        t=s["_type"]
+        if t=="LabelStmt":
+            self.syms.labels[s["name"]] = self.here(); return
+        if t=="InitStmt":
+            cap = encode_capsule_id(s["target"]["name"])
+            self.emit([OP["INIT"], cap]); return
+        if t=="LoadStmt":
+            cap = encode_capsule_id(s["target"]["name"])
+            kidx = self.compile_value(s["value"])
+            self.emit([OP["LOAD"], cap] + list(u16(kidx))); return
+        if t=="CallStmt":
+            fidx = self.syms.func_idx(s["func"]["name"])
+            if s.get("arg"):
+                cap = encode_capsule_id(s["arg"]["name"])
+                self.emit([OP["CALLA"]] + list(u16(fidx)) + [cap])
+            else:
+                self.emit([OP["CALL"]] + list(u16(fidx)))
+            return
+        if t=="ExitStmt": self.emit(OP["EXIT"]); return
+        if t=="LeaseStmt": self.emit([OP["LEASE"], encode_capsule_id(s["target"]["name"])]); return
+        if t=="SubleaseStmt": self.emit([OP["SUBLEASE"], encode_capsule_id(s["target"]["name"])]); return
+        if t=="ReleaseStmt": self.emit([OP["RELEASE"], encode_capsule_id(s["target"]["name"])]); return
+        if t=="CheckExpStmt": self.emit([OP["CHECKEXP"], encode_capsule_id(s["target"]["name"])]); return
+        if t=="RenderStmt": self.emit([OP["RENDER"], encode_capsule_id(s["target"]["name"])]); return
+        if t=="InputStmt":  self.emit([OP["INPUT"],  encode_capsule_id(s["target"]["name"])]); return
+        if t=="OutputStmt": self.emit([OP["OUTPUT"], encode_capsule_id(s["target"]["name"])]); return
+        if t=="SendStmt":
+            a=encode_capsule_id(s["chan"]["name"]); b=encode_capsule_id(s["pkt"]["name"])
+            self.emit([OP["SEND"], a, b]); return
+        if t=="RecvStmt":
+            a=encode_capsule_id(s["chan"]["name"]); b=encode_capsule_id(s["pkt"]["name"])
+            self.emit([OP["RECV"], a, b]); return
+        if t=="SpawnStmt":
+            fidx = self.syms.func_idx(s["func"]["name"])
+            args = s["args"] or []
+            self.emit([OP["SPAWN"]] + list(u16(fidx)) + [len(args)&0xFF])
+            for a in args:
+                if a["_type"]=="Literal":
+                    kidx = self.compile_value(a)
+                    self.emit([0x01] + list(u16(kidx)))  # kind tag 0x01 = const index
+                elif a["_type"]=="Identifier" and a.get("is_dollar"):
+                    self.emit([0x02, encode_capsule_id(a["name"])])     # kind tag 0x02 = capsule
+                else:
+                    # expression: emit evaluated value to const pool? For now not supported in spawn args
+                    kidx = self.compile_value(a) if a["_type"]=="Literal" else self.consts.idx("STRING","<expr>")
+                    self.emit([0x01] + list(u16(kidx)))
+            return
+        if t=="JoinStmt":
+            self.emit([OP["JOIN"], encode_capsule_id(s["thread"]["name"])]); return
+        if t=="StampStmt":
+            cap=encode_capsule_id(s["target"]["name"]); kidx=self.compile_value(s["value"])
+            self.emit([OP["STAMP"], cap] + list(u16(kidx))); return
+        if t=="ExpireStmt":
+            cap=encode_capsule_id(s["target"]["name"]); kidx=self.consts.idx("DURATION", s["duration"]["value"])
+            self.emit([OP["EXPIRE"], cap] + list(u16(kidx))); return
+        if t=="SleepStmt":
+            kidx=self.consts.idx("DURATION", s["duration"]["value"])
+            self.emit([OP["SLEEP"]] + list(u16(kidx))); return
+        if t=="YieldStmt": self.emit(OP["YIELD"]); return
+        if t=="ErrorStmt":
+            cap=encode_capsule_id(s["target"]["name"])
+            cidx=self.compile_value(s["code"])
+            midx=self.consts.idx("STRING", s["message"]["value"])
+            self.emit([OP["ERROR"], cap] + list(u16(cidx)) + list(u16(midx))); return
+        if t=="IfStmt":
+            self.compile_expr(s["cond"])
+            self.emit(OP["JZ"])
+            jz_at = self.here()
+            self.emit([0x00,0x00])  # rel16 placeholder
+            self.compile_block(s["then_block"])
+            self.emit(OP["JMP"])
+            jmp_at = self.here()
+            self.emit([0x00,0x00])
+            else_target = self.here()
+            self.patch_rel16(jz_at, else_target)
+            if s.get("else_block"):
+                self.compile_block(s["else_block"])
+            end_target = self.here()
+            self.patch_rel16(jmp_at, end_target)
+            return
+        if t=="LoopStmt":
+            start = self.here()
+            self.compile_expr(s["cond"])
+            self.emit(OP["JZ"]); jz_at = self.here(); self.emit([0x00,0x00])
+            self.compile_block(s["body"])
+            self.emit(OP["JMP"]); back_at=self.here(); self.emit([0x00,0x00])
+            self.patch_rel16(back_at, start)
+            end = self.here()
+            self.patch_rel16(jz_at, end)
+            return
+        if t=="GotoStmt":
+            self.emit(OP["JMP"])
+            at=self.here(); self.emit([0x00,0x00])
+            self.fixups.append((at, "label", s["label"]))
+            return
+
+        raise RuntimeError(f"Unhandled stmt type {t}")
+
+    # --- Expressions ---
+    def compile_expr(self, e):
+        t=e["_type"]
+        if t=="Literal":
+            kidx=self.consts.idx(e["kind"], e["value"])
+            self.emit([OP["PUSHK"]] + list(u16(kidx)))
+            return
+        if t=="Identifier":
+            if e.get("is_dollar"):
+                self.emit([OP["PUSHCAP"], encode_capsule_id(e["name"])])
+            else:
+                # plain ident -> treat as string const
+                kidx=self.consts.idx("STRING", e["name"])
+                self.emit([OP["PUSHK"]] + list(u16(kidx)))
+            return
+        if t=="UnaryOp":
+            self.compile_expr(e["rhs"])
+            self.emit([OP["UNOP"], UNID[e["op"]]])
+            return
+        if t=="BinaryOp":
+            self.compile_expr(e["lhs"]); self.compile_expr(e["rhs"])
+            self.emit([OP["BINOP"], OPID[e["op"]]])
+            return
+        raise RuntimeError(f"Unhandled expr node {t}")
+
+    def compile_value(self, v)->int:
+        if v["_type"]=="Literal":
+            return self.consts.idx(v["kind"], v["value"])
+        # attempt to fold simple identifiers as strings
+        if v["_type"]=="Identifier":
+            if v.get("is_dollar"):  # cannot constant-fold capsules
+                return self.consts.idx("STRING", f"${v['name']}")
+            else:
+                return self.consts.idx("STRING", v["name"])
+        # Fallback: serialize expression to string for const pool (debug aid)
+        return self.consts.idx("STRING","<expr>")
+
+def ast_from_source(src: str) -> Dict[str,Any]:
+    ast_json = parser_mod.parse_source_to_ast_json(src)
+    return ast_json
+
+def encode_hex(bs: bytes) -> str:
+    return " ".join(f"{b:02X}" for b in bs)
+
+def main():
+    import argparse, pathlib
+    ap = argparse.ArgumentParser(description="E Minor v1.0 IR Emitter")
+    ap.add_argument("file", help="source file path or '-' for stdin")
+    ap.add_argument("--no-starcheck", action="store_true")
+    ap.add_argument("--out-prefix", default=None, help="prefix for outputs (default: input basename)")
+    args = ap.parse_args()
+
+    if args.file == "-":
+        src = sys.stdin.read()
+        prefix = args.out_prefix or "stdin"
+    else:
+        with open(args.file, "r", encoding="utf-8") as f: src=f.read()
+        base = os.path.basename(args.file)
+        prefix = args.out_prefix or os.path.splitext(base)[0]
+
+    ast = ast_from_source(src)
+
+    if not args.no_starcheck:
+        issues = starcheck.validate(ast)
+        has_err = any(i["severity"]=="ERROR" for i in issues)
+        with open(prefix+".star.json","w",encoding="utf-8") as f:
+            json.dump({"issues":issues}, f, indent=2)
+        if has_err:
+            print(json.dumps({"error":"Star-Code validation failed","issues":issues}, indent=2), file=sys.stderr)
+            sys.exit(2)
+
+    emitter = Emitter(ast)
+    code = emitter.compile()
+    hexs = encode_hex(code)
+
+    with open(prefix+".ir.hex","w",encoding="utf-8") as f: f.write(hexs+"\n")
+    with open(prefix+".ir.bin","wb") as f: f.write(code)
+    with open(prefix+".sym.json","w",encoding="utf-8") as f:
+        json.dump({
+            "const_pool": emitter.consts.json(),
+            "func_index": emitter.syms.func_index,
+            "labels": emitter.syms.labels,
+            "opcodes": OP,
+            "binops": OPID,
+            "unops": UNID,
+        }, f, indent=2)
+
+    print(json.dumps({
+        "ok": True,
+        "bytes": len(code),
+        "hex_path": prefix+".ir.hex",
+        "bin_path": prefix+".ir.bin",
+        "sym_path": prefix+".sym.json",
+        "star_path": None if args.no_starcheck else prefix+".star.json"
+    }, indent=2))
+
+if __name__ == "__main__":
+    main()
+
+    import lex, json, sys
+    from ast import Program, FunctionDecl, WorkerDecl, Identifier, Literal, IfStmt, LoopStmt, GotoStmt, LabelStmt, InitStmt, LoadStmt, CallStmt, ExitStmt, LeaseStmt, SubleaseStmt, ReleaseStmt, CheckExpStmt, RenderStmt, InputStmt, OutputStmt, SendStmt, RecvStmt, SpawnStmt, JoinStmt, StampStmt, ExpireStmt, SleepStmt, YieldStmt, ErrorStmt
+    class ParserError(Exception): pass
