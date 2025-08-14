@@ -1,0 +1,535 @@
+@module "runtime/stdlib"
+function $render($A: capsule<any>) { { #exit } }
+function $input($A: capsule<any>)  { { #exit } }
+function $output($A: capsule<any>) { { #exit } }
+function $sleep_ns($dur_ns: u64) { { #exit } }
+function $send($chan: capsule<any>, $pkt: capsule<any>) { { #exit } }
+function $recv($chan: capsule<any>, $pkt: capsule<any>) { { #exit } }
+function $spawn($f: capsule<any>) { { #exit } }
+function $join($f: capsule<any>) { { #exit } }
+function $exit($code: u64) { { #exit } }
+function $assert($cond: bool, $msg: capsule<any>) { { #exit } }
+function $log($msg: capsule<any>) { { #exit } }
+function $panic($msg: capsule<any>) { { #exit } }
+function $time() -> u64 { { #exit } }
+function $time_ns() -> u64 { { #exit } }
+function $time_millis() -> u64 { { #exit } }
+function $time_micros() -> u64 { { #exit } }
+function $time_secs() -> u64 { { #exit } }
+function $time_nanos() -> u64 { { #exit } }
+function $time_ticks() -> u64 { { #exit } }
+function $time_ticks_ns() -> u64 { { #exit } }
+function $time_ticks_millis() -> u64 { { #exit } }
+function $time_ticks_micros() -> u64 { { #exit } }
+function $time_ticks_secs() -> u64 { { #exit } }
+function $time_ticks_nanos() -> u64 { { #exit } }
+function $time_ticks_ticks() -> u64 { { #exit } }
+function $time_ticks_ticks_ns() -> u64 { { #exit } }
+function $time_ticks_ticks_millis() -> u64 { { #exit } }
+function $time_ticks_ticks_micros() -> u64 { { #exit } }
+function $time_ticks_ticks_secs() -> u64 { { #exit } }
+function $time_ticks_ticks_nanos() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ns() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_millis() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_micros() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_secs() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_nanos() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ns() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_millis() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_micros() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_secs() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_nanos() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ns() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_millis() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_micros() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_secs() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_nanos() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_ns() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_millis() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_micros() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_secs() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_nanos() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_ticks() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_ticks_ns() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_ticks_millis() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_ticks_micros() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_ticks_secs() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_ticks_ticks_nanos() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_ticks_ticks() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_ticks_ticks_ns() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_ticks_ticks_millis() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_ticks_ticks_micros() -> u64 { { #exit } }
+function $time_ticks_ticks_ticks_ticks_ticks_ticks_ticks_ticks_secs() -> u64 { { #exit } }
+
+@module "tools/railroad"
+function $grammar_to_railroad($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_svg($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_png($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_pdf($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_html($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_text($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_json($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_xml($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_yaml($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_csv($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_sql($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_markdown($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_latex($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_rtf($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_docx($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_odt($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_epub($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_mobi($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_html($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_pdf($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_txt($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_json($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_xml($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_yaml($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_csv($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_sql($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_markdown($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_latex($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_rtf($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_docx($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_odt($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_epub($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_mobi($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_fiction($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_fiction_html($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_fiction_pdf($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_fiction_txt($IN: capsule<string>) : capsule<string> { { #exit } }
+function $railroad_to_fiction_fiction_json($IN: capsule<string>) : capsule<string> { { #exit } }
+    
+@module "compiler/ir_emitter"
+initialize capsule $TEXT
+initialize capsule $DATA
+initialize capsule $RODATA
+initialize capsule $SYMS
+initialize capsule $RELOCS
+function $ir_emit_module($P: capsule<ast_program>) : capsule<ir_module> { { #exit } }
+function $emit_func($F: capsule<ast_node>) { { #exit } }
+function $emit_stmt($S: capsule<ast_node>) { { #exit } }
+function $emit_expr($E: capsule<ast_node>) { { #exit } }
+function $patch_and_pack() : capsule<ir_module> { { #exit } }
+
+function $ir_emit_program($P: capsule<ast_program>) : capsule<ir_module> {
+    $TEXT = capsule<string>::new();
+    $DATA = capsule<string>::new();
+    $RODATA = capsule<string>::new();
+    $SYMS = capsule<string>::new();
+    $RELOCS = capsule<string>::new();
+    
+    // Emit the module
+    let module = $ir_emit_module($P);
+    
+    // Patch and pack the module
+    return $patch_and_pack();
+}
+function $ir_emit_func($F: capsule<ast_node>) {
+    // Emit the function
+    $emit_func($F);
+}
+function $ir_emit_stmt($S: capsule<ast_node>) {
+    // Emit the statement
+    $emit_stmt($S);
+}
+function $ir_emit_expr($E: capsule<ast_node>) {
+    // Emit the expression
+    $emit_expr($E);
+}
+function $ir_patch_and_pack() : capsule<ir_module> {
+    // Patch and pack the module
+    return $patch_and_pack();
+}
+function $ir_emit_finalize() {
+    // Finalize the IR emission
+    $TEXT = capsule<string>::new();
+    $DATA = capsule<string>::new();
+    $RODATA = capsule<string>::new();
+    $SYMS = capsule<string>::new();
+    $RELOCS = capsule<string>::new();
+}
+function $ir_emit_reset() {
+    // Reset the IR emitter state
+    $TEXT = capsule<string>::new();
+    $DATA = capsule<string>::new();
+    $RODATA = capsule<string>::new();
+    $SYMS = capsule<string>::new();
+    $RELOCS = capsule<string>::new();
+}
+function $ir_emit_clear() {
+    // Clear the IR emitter state
+    $TEXT = capsule<string>::new();
+    $DATA = capsule<string>::new();
+    $RODATA = capsule<string>::new();
+    $SYMS = capsule<string>::new();
+    $RELOCS = capsule<string>::new();
+}
+function $ir_emit_get_text() -> capsule<string> {
+    // Get the emitted text
+    return $TEXT;
+}
+function $ir_emit_get_data() -> capsule<string> {
+    // Get the emitted data
+    return $DATA;
+}
+function $ir_emit_get_rodata() -> capsule<string> {
+    // Get the emitted read-only data
+    return $RODATA;
+}
+function $ir_emit_get_syms() -> capsule<string> {
+    // Get the emitted symbols
+    return $SYMS;
+}
+function $ir_emit_get_relocs() -> capsule<string> {
+    // Get the emitted relocations
+    return $RELOCS;
+}
+function $ir_emit_get_module() -> capsule<ir_module> {
+    // Get the emitted module
+    return capsule<ir_module>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS);
+}
+function $ir_emit_get_program() -> capsule<ast_program> {
+    // Get the emitted program
+    return capsule<ast_program>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS);
+}
+function $ir_emit_get_function($name: string) -> capsule<ir_function> {
+    // Get the emitted function by name
+    return capsule<ir_function>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS, $name);
+}
+function $ir_emit_get_statement($id: u64) -> capsule<ir_statement> {
+    // Get the emitted statement by ID
+    return capsule<ir_statement>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS, $id);
+}
+function $ir_emit_get_expression($id: u64) -> capsule<ir_expression> {
+    // Get the emitted expression by ID
+    return capsule<ir_expression>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS, $id);
+}
+function $ir_emit_get_symbol($name: string) -> capsule<ir_symbol> {
+    // Get the emitted symbol by name
+    return capsule<ir_symbol>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS, $name);
+}
+function $ir_emit_get_relocation($name: string) -> capsule<ir_relocation> {
+    // Get the emitted relocation by name
+    return capsule<ir_relocation>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS, $name);
+}
+function $ir_emit_get_relocations() -> capsule<ir_relocation_list> {
+    // Get the list of emitted relocations
+    return capsule<ir_relocation_list>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS);
+}
+function $ir_emit_get_symbols() -> capsule<ir_symbol_list> {
+    // Get the list of emitted symbols
+    return capsule<ir_symbol_list>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS);
+}
+function $ir_emit_get_functions() -> capsule<ir_function_list> {
+    // Get the list of emitted functions
+    return capsule<ir_function_list>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS);
+}
+function $ir_emit_get_statements() -> capsule<ir_statement_list> {
+    // Get the list of emitted statements
+    return capsule<ir_statement_list>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS);
+}
+function $ir_emit_get_expressions() -> capsule<ir_expression_list> {
+    // Get the list of emitted expressions
+    return capsule<ir_expression_list>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS);
+}
+function $ir_emit_get_modules() -> capsule<ir_module_list> {
+    // Get the list of emitted modules
+    return capsule<ir_module_list>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS);
+}
+function $ir_emit_get_programs() -> capsule<ir_program_list> {
+    // Get the list of emitted programs
+    return capsule<ir_program_list>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS);
+}
+function $ir_emit_get_ir() -> capsule<ir> {
+    // Get the emitted IR
+    return capsule<ir>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS);
+}
+function $ir_emit_get_ir_module() -> capsule<ir_module> {
+    // Get the emitted IR module
+    return capsule<ir_module>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS);
+}
+function $ir_emit_get_ir_program() -> capsule<ir_program> {
+    // Get the emitted IR program
+    return capsule<ir_program>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS);
+}
+function $ir_emit_get_ir_function($name: string) -> capsule<ir_function> {
+    // Get the emitted IR function by name
+    return capsule<ir_function>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS, $name);
+}
+function $ir_emit_get_ir_statement($id: u64) -> capsule<ir_statement> {
+    // Get the emitted IR statement by ID
+    return capsule<ir_statement>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS, $id);
+}
+function $ir_emit_get_ir_expression($id: u64) -> capsule<ir_expression> {
+    // Get the emitted IR expression by ID
+    return capsule<ir_expression>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS, $id);
+}
+function $ir_emit_get_ir_symbol($name: string) -> capsule<ir_symbol> {
+    // Get the emitted IR symbol by name
+    return capsule<ir_symbol>::new($TEXT, $DATA, $RODATA, $SYMS, $RELOCS, $name);
+}
+
+@module "compiler/ir_spec"
+let $OP_INIT: u8; let $OP_LOAD: u8; let $OP_CALL: u8; let $OP_CALLA: u8; let $OP_EXIT: u8;
+let $OP_RENDER: u8; let $OP_INPUT: u8; let $OP_OUTPUT: u8;
+let $OP_SEND: u8; let $OP_RECV: u8; let $OP_SPAWN: u8; let $OP_JOIN: u8;
+let $OP_STAMP: u8; let $OP_EXPIRE: u8; let $OP_SLEEP: u8; let $OP_YIELD: u8; let $OP_ERROR: u8;
+let $OP_PUSHK: u8; let $OP_PUSHCAP: u8; let $OP_UNOP: u8; let $OP_BINOP: u8;
+let $OP_JZ: u8; let $OP_JNZ: u8; let $OP_JMP: u8; let $OP_END: u8;
+let $OP_NOP: u8; let $OP_ASSERT: u8; let $OP_LOG: u8; let $OP_PANIC: u8;
+let $OP_TIME: u8; let $OP_TIME_NS: u8; let $OP_TIME_MILLIS: u8; let $OP_TIME_MICROS: u8;
+let $OP_TIME_SECS: u8; let $OP_TIME_NANOS: u8; let $OP_TIME_TICKS: u8;
+let $OP_TIME_TICKS_NS: u8; let $OP_TIME_TICKS_MILLIS: u8; let $OP_TIME_TICKS_MICROS: u8;
+let $OP_TIME_TICKS_SECS: u8; let $OP_TIME_TICKS_NANOS: u8;
+let $OP_TIME_TICKS_TICKS: u8; let $OP_TIME_TICKS_TICKS_NS: u8;
+let $OP_TIME_TICKS_TICKS_MILLIS: u8; let $OP_TIME_TICKS_TICKS_MICROS: u8;
+let $OP_TIME_TICKS_TICKS_SECS: u8; let $OP_TIME_TICKS_TICKS_NANOS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS: u8; let $OP_TIME_TICKS_TICKS_TICKS_NS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_MILLIS: u8; let $OP_TIME_TICKS_TICKS_TICKS_MICROS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_SECS: u8; let $OP_TIME_TICKS_TICKS_TICKS_NANOS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS: u8; let $OP_TIME_TICKS_TICKS_TICKS_TICKS_NS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_MILLIS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_MICROS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_SECS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_NANOS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_TICKS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_TICKS_NS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_TICKS_MILLIS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_TICKS_MICROS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_TICKS_SECS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_TICKS_NANOS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_TICKS_TICKS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_TICKS_TICKS_NS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_TICKS_TICKS_MILLIS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_TICKS_TICKS_MICROS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_TICKS_TICKS_SECS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_TICKS_TICKS_NANOS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_TICKS_TICKS_TICKS: u8;
+let $OP_TIME_TICKS_TICKS_TICKS_TICKS_TICKS_TICKS_TICKS_NS: u8;
+
+@module "compiler/lexer"
+@import "compiler/tokens" as $tok
+function $lexer_init($IN: capsule<string>) { { #exit } }
+function $lexer_next() : capsule<token> { { #exit } }
+function $scan_identifier() : capsule<token> { { #exit } }
+function $scan_number_or_duration() : capsule<token> { { #exit } }
+function $scan_string() : capsule<token> { { #exit } }
+function $skip_ws_and_comments() { { #exit } }
+function $lexer_reset() { { #exit } }
+function $lexer_finalize() { { #exit } }
+function $lexer_get_tokens() -> capsule<token_list> {
+    // Return the list of tokens
+    return capsule<token_list>::new();
+}
+function $lexer_get_token($index: u64) -> capsule<token> {
+    // Return the token at the specified index
+    return capsule<token>::new();
+}
+function $lexer_get_current_token() -> capsule<token> {
+    // Return the current token
+    return capsule<token>::new();
+}
+function $lexer_get_next_token() -> capsule<token> {
+    // Return the next token
+    return capsule<token>::new();
+}
+function $lexer_get_prev_token() -> capsule<token> {
+    // Return the previous token
+    return capsule<token>::new();
+}
+function $lexer_get_token_count() -> u64 {
+    // Return the total number of tokens
+    return 0;
+}
+function $lexer_get_token_at($index: u64) -> capsule<token> {
+    // Return the token at the specified index
+    return capsule<token>::new();
+}
+function $lexer_get_token_by_type($type: u64) -> capsule<token_list> {
+    // Return a list of tokens of the specified type
+    return capsule<token_list>::new();
+}
+function $lexer_get_token_by_value($value: string) -> capsule<token> {
+    // Return the token with the specified value
+    return capsule<token>::new();
+}
+function $lexer_get_token_by_position($line: u64, $col: u64) -> capsule<token> {
+    // Return the token at the specified line and column
+    return capsule<token>::new();
+}
+function $lexer_get_token_by_range($start: u64, $end: u64) -> capsule<token_list> {
+    // Return a list of tokens within the specified range
+    return capsule<token_list>::new();
+}
+function $lexer_get_token_by_position_range($start_line: u64, $start_col: u64, $end_line: u64, $end_col: u64) -> capsule<token_list> {
+    // Return a list of tokens within the specified position range
+    return capsule<token_list>::new();
+}
+function $lexer_get_token_by_position_and_type($line: u64, $col: u64, $type: u64) -> capsule<token> {
+    // Return the token at the specified line and column with the specified type
+    return capsule<token>::new();
+}
+function $lexer_get_token_by_value_and_type($value: string, $type: u64) -> capsule<token_list> {
+    // Return a list of tokens with the specified value and type
+    return capsule<token_list>::new();
+}
+function $lexer_get_token_by_value_and_position($value: string, $line: u64, $col: u64) -> capsule<token> {
+    // Return the token with the specified value at the specified line and column
+    return capsule<token>::new();
+}
+function $lexer_get_token_by_value_and_position_range($value: string, $start_line: u64, $start_col: u64, $end_line: u64, $end_col: u64) -> capsule<token_list> {
+    // Return a list of tokens with the specified value within the specified position range
+    return capsule<token_list>::new();
+}
+function $lexer_get_token_by_type_and_position($type: u64, $line: u64, $col: u64) -> capsule<token> {
+    // Return the token of the specified type at the specified line and column
+    return capsule<token>::new();
+}
+function $lexer_get_token_by_type_and_position_range($type: u64, $start_line: u64, $start_col: u64, $end_line: u64, $end_col: u64) -> capsule<token_list> {
+    // Return a list of tokens of the specified type within the specified position range
+    return capsule<token_list>::new();
+}
+function $lexer_get_token_by_value_and_position_and_type($value: string, $line: u64, $col: u64, $type: u64) -> capsule<token> {
+    // Return the token with the specified value at the specified line and column with the specified type
+    return capsule<token>::new();
+}
+function $lexer_get_token_by_position_and_value_and_type($line: u64, $col: u64, $value: string, $type: u64) -> capsule<token> {
+    // Return the token at the specified line and column with the specified value and type
+    return capsule<token>::new();
+}
+function $lexer_get_token_by_position_and_type_and_value($line: u64, $col: u64, $type: u64, $value: string) -> capsule<token> {
+    // Return the token at the specified line and column with the specified type and value
+    return capsule<token>::new();
+}
+function $lexer_get_token_by_type_and_value_and_position($type: u64, $value: string, $line: u64, $col: u64) -> capsule<token> {
+    // Return the token of the specified type and value at the specified line and column
+    return capsule<token>::new();
+}
+function $lexer_get_token_by_value_range($value: string, $start_line: u64, $start_col: u64, $end_line: u64, $end_col: u64) -> capsule<token_list> {
+    // Return a list of tokens with the specified value within the specified range
+    return capsule<token_list>::new();
+}
+function $lexer_get_token_by_type_range($type: u64, $start_line: u64, $start_col: u64, $end_line: u64, $end_col: u64) -> capsule<token_list> {
+    // Return a list of tokens of the specified type within the specified range
+    return capsule<token_list>::new();
+}
+function $lexer_get_token_by_value_and_type_range($value: string, $type: u64, $start_line: u64, $start_col: u64, $end_line: u64, $end_col: u64) -> capsule<token_list> {
+    // Return a list of tokens of the specified type and value within the specified range
+    return capsule<token_list>::new();
+}
+function $lexer_get_token_by_value_and_type_and_position_range($value: string, $type: u64, $start_line: u64, $start_col: u64, $end_line: u64, $end_col: u64) -> capsule<token_list> {
+    // Return a list of tokens with the specified value and type within the specified position range
+    return capsule<token_list>::new();
+}
+function $lexer_get_token_by_type_and_value_and_position_range($type: u64, $value: string, $start_line: u64, $start_col: u64, $end_line: u64, $end_col: u64) -> capsule<token_list> {
+    // Return a list of tokens of the specified type and value within the specified position range
+    return capsule<token_list>::new();
+}
+
+@module "compiler/linker"
+function $link_multi_segment($M: capsule<ir_module>) : capsule<bin_artifacts> { { #exit } }
+function $link_single_segment($M: capsule<ir_module>) : capsule<bin_artifacts> { { #exit } }
+function $link_module($M: capsule<ir_module>) : capsule<bin_artifacts> { { #exit } }
+function $link_module_with_segments($M: capsule<ir_module>, $segments: u64) : capsule<bin_artifacts> { { #exit } }
+function $link_module_with_segments_and_flags($M: capsule<ir_module>, $segments: u64, $flags: u64) : capsule<bin_artifacts> { { #exit } }
+function $link_module_with_segments_and_flags_and_options($M: capsule<ir_module>, $segments: u64, $flags: u64, $options: capsule<bin_options>) : capsule<bin_artifacts> { { #exit } }
+function $link_module_with_segments_and_flags_and_options_and_output($M: capsule<ir_module>, $segments: u64, $flags: u64, $options: capsule<bin_options>, $output: string) : capsule<bin_artifacts> { { #exit } }
+function $link_module_with_segments_and_flags_and_options_and_output_and_debug($M: capsule<ir_module>, $segments: u64, $flags: u64, $options: capsule<bin_options>, $output: string, $debug: bool) : capsule<bin_artifacts> { { #exit } }
+function $link_module_with_segments_and_flags_and_options_and_output_and_debug_and_symbols($M: capsule<ir_module>, $segments: u64, $flags: u64, $options: capsule<bin_options>, $output: string, $debug: bool, $symbols: bool) : capsule<bin_artifacts> { { #exit } }
+function $link_module_with_segments_and_flags_and_options_and_output_and_debug_and_symbols_and_compression($M: capsule<ir_module>, $segments: u64, $flags: u64, $options: capsule<bin_options>, $output: string, $debug: bool, $symbols: bool, $compression: bool) : capsule<bin_artifacts> { { #exit } }
+function $link_module_with_segments_and_flags_and_options_and_output_and_debug_and_symbols_and_compression_and_architecture($M: capsule<ir_module>, $segments: u64, $flags: u64, $options: capsule<bin_options>, $output: string, $debug: bool, $symbols: bool, $compression: bool, $architecture: string) : capsule<bin_artifacts> { { #exit } }
+function $link_module_with_segments_and_flags_and_options_and_output_and_debug_and_symbols_and_compression_and_architecture_and_target($M: capsule<ir_module>, $segments: u64, $flags: u64, $options: capsule<bin_options>, $output: string, $debug: bool, $symbols: bool, $compression: bool, $architecture: string, $target: string) : capsule<bin_artifacts> { { #exit } }
+function $link_module_with_segments_and_flags_and_options_and_output_and_debug_and_symbols_and_compression_and_architecture_and_target_and_version($M: capsule<ir_module>, $segments: u64, $flags: u64, $options: capsule<bin_options>, $output: string, $debug: bool, $symbols: bool, $compression: bool, $architecture: string, $target: string, $version: string) : capsule<bin_artifacts> { { #exit } }
+function $link_module_with_segments_and_flags_and_options_and_output_and_debug_and_symbols_and_compression_and_architecture_and_target_and_version_and_license($M: capsule<ir_module>, $segments: u64, $flags: u64, $options: capsule<bin_options>, $output: string, $debug: bool, $symbols: bool, $compression: bool, $architecture: string, $target: string, $version: string, $license: string) : capsule<bin_artifacts> { { #exit } }
+function $link_module_with_segments_and_flags_and_options_and_output_and_debug_and_symbols_and_compression_and_architecture_and_target_and_version_and_license_and_metadata($M: capsule<ir_module>, $segments: u64, $flags: u64, $options: capsule<bin_options>, $output: string, $debug: bool, $symbols: bool, $compression: bool, $architecture: string, $target: string, $version: string, $license: string, $metadata: capsule<bin_metadata>) : capsule<bin_artifacts> { { #exit } }
+function $link_module_with_segments_and_flags_and_options_and_output_and_debug_and_symbols_and_compression_and_architecture_and_target_and_version_and_license_and_metadata_and_dependencies($M: capsule<ir_module>, $segments: u64, $flags: u64, $options: capsule<bin_options>, $output: string, $debug: bool, $symbols: bool, $compression: bool, $architecture: string, $target: string, $version: string, $license: string, $metadata: capsule<bin_metadata>, $dependencies: capsule<bin_dependencies>) : capsule<bin_artifacts> { { #exit } }
+function $link_module_with_segments_and_flags_and_options_and_output_and_debug_and_symbols_and_compression_and_architecture_and_target_and_version_and_license_and_metadata_and_dependencies_and_custom($M: capsule<ir_module>, $segments: u64, $flags: u64, $options: capsule<bin_options>, $output: string, $debug: bool, $symbols: bool, $compression: bool, $architecture: string, $target: string, $version: string, $license: string, $metadata: capsule<bin_metadata>, $dependencies: capsule<bin_dependencies>, $custom: capsule<bin_custom>) : capsule<bin_artifacts> { { #exit } }
+function $link_module_with_segments_and_flags_and_options_and_output_and_debug_and_symbols_and_compression_and_architecture_and_target_and_version_and_license_and_metadata_and_dependencies_and_custom_and_output_format($M: capsule<ir_module>, $segments: u64, $flags: u64, $options: capsule<bin_options>, $output: string, $debug: bool, $symbols: bool, $compression: bool, $architecture: string, $target: string, $version: string, $license: string, $metadata: capsule<bin_metadata>, $dependencies: capsule<bin_dependencies>, $custom: capsule<bin_custom>, $output_format: string) : capsule<bin_artifacts> { { #exit } }
+
+@module "compiler/main"
+@entry_point {
+  initialize capsule $IN
+  initialize capsule $AST
+  initialize capsule $IR
+  initialize capsule $BIN
+  #input $IN
+  #call $lex_and_parse, $IN
+  #call $starcode_validate, $AST
+  #call $emit_ir, $AST
+  #call $optimize_ir, $IR
+  #call $emit_binary, $IR
+  #call $write_outputs, $BIN
+  #exit
+}
+
+@module "compiler/optimizer"
+function $opt_passes($M: capsule<ir_module>) : capsule<ir_module> {
+  { #call $peephole, $M #call $const_fold, $M #call $inline_small, $M #call $dead_code, $M #call $flow_flatten, $M #exit }
+}
+function $peephole($M: capsule<ir_module>) { { #exit } }
+function $const_fold($M: capsule<ir_module>) { { #exit } }
+function $inline_small($M: capsule<ir_module>) { { #exit } }
+function $dead_code($M: capsule<ir_module>) { { #exit } }
+function $flow_flatten($M: capsule<ir_module>) { { #exit } }
+
+@module "compiler/parser"
+@import "compiler/lexer"  as $lex
+@import "compiler/tokens" as $tok
+@import "compiler/ast"    as $ast
+initialize capsule $LA
+initialize capsule $ASTP
+function $parser_run($IN: capsule<string>) : capsule<ast_program> { { #call $lex.lexer_init, $IN #exit } }
+function $advance() { { #load $LA, $lex.lexer_next() #exit } }
+function $parse_top($P: capsule<ast_node>) { { #exit } }
+function $parse_block() : capsule<ast_node> { { #exit } }
+function $parse_stmt()  : capsule<ast_node> { { #exit } }
+function $parse_expr()  : capsule<ast_node> { { #exit } }
+
+@module "compiler/starcode"
+function $starcode_pass($P: capsule<ast_program>) : capsule<issues> { { #exit } }
+
+@module "compiler/tokens"
+@export $TK
+let $TK_EOF: u16; let $TK_ID: u16; let $TK_NUMBER: u16; let $TK_STRING: u16; let $TK_BOOL: u16;
+let $TK_LPAREN: u16; let $TK_RPAREN: u16; let $TK_LBRACE: u16; let $TK_RBRACE: u16;
+let $TK_COMMA: u16; let $TK_SEMI: u16; let $TK_COLON: u16;
+let $TK_PLUS: u16; let $TK_MINUS: u16; let $TK_STAR: u16; let $TK_SLASH: u16; let $TK_PERCENT: u16;
+let $TK_EQ: u16; let $TK_NEQ: u16; let $TK_LT: u16; let $TK_GT: u16; let $TK_LE: u16; let $TK_GE: u16;
+let $TK_ANDAND: u16; let $TK_OROR: u16; let $TK_ASSIGN: u16;
+let $TK_AT_MAIN: u16; let $TK_AT_ENTRY_POINT: u16; let $TK_FUNCTION: u16; let $TK_WORKER: u16; let $TK_LET: u16;
+let $TK_MODULE: u16; let $TK_IMPORT: u16; let $TK_EXPORT: u16; let $TK_GOTO: u16; let $TK_LABEL: u16;
+let $TK_HASH_INIT: u16; let $TK_HASH_LOAD: u16; let $TK_HASH_CALL: u16; let $TK_HASH_EXIT: u16;
+let $TK_HASH_IF: u16; let $TK_HASH_ELSE: u16; let $TK_HASH_ENDIF: u16; let $TK_HASH_LOOP: u16;
+let $TK_HASH_RENDER: u16; let $TK_HASH_INPUT: u16; let $TK_HASH_OUTPUT: u16;
+let $TK_HASH_SEND: u16; let $TK_HASH_RECV: u16; let $TK_HASH_SPAWN: u16; let $TK_HASH_JOIN: u16;
+let $TK_HASH_LEASE: u16; let $TK_HASH_SUBLEASE: u16; let $TK_HASH_RELEASE: u16; let $TK_HASH_CHECKEXP: u16;
+let $TK_HASH_STAMP: u16; let $TK_HASH_EXPIRE: u16; let $TK_HASH_SLEEP: u16; let $TK_HASH_YIELD: u16; let $TK_HASH_ERROR: u16;
+function $token_name($k: u16) : string { { #exit } }    
+
+@module "compiler/ast"
+let $NK_PROGRAM: u16; let $NK_FUNC: u16; let $NK_BLOCK: u16; let $NK_LET: u16;
+let $NK_IF: u16; let $NK_LOOP: u16; let $NK_RETURN: u16; let $NK_BINOP: u16; let $NK_UNOP: u16;
+let $NK_CALL: u16; let $NK_VAR: u16; let $NK_CONST: u16; let $NK_LABEL: u16; let $NK_GOTO: u16;
+function $new_program() : capsule<ast_node> { { #exit } }
+function $new_block() : capsule<ast_node> { { #exit } }
+function $block_add($B: capsule<ast_node>, $S: capsule<ast_node>) { { #exit } }
+function $new_func($name: string, $params: capsule<ast_node>, $ret: string, $body: capsule<ast_node>) : capsule<ast_node> { { #exit } }
+function $new_let($name: string, $type: string, $init: capsule<ast_node>) : capsule<ast_node> { { #exit } }
+function $new_if($c: capsule<ast_node>, $t: capsule<ast_node>, $e: capsule<ast_node>) : capsule<ast_node> { { #exit } }
+function $new_loop($c: capsule<ast_node>, $b: capsule<ast_node>) : capsule<ast_node> { { #exit } }
+function $new_bin($op: string, $l: capsule<ast_node>, $r: capsule<ast_node>) : capsule<ast_node> { { #exit } }
+function $new_un($op: string, $r: capsule<ast_node>) : capsule<ast_node> { { #exit } }
+function $new_call($fn: string, $args: capsule<ast_node>) : capsule<ast_node> { { #exit } }
+function $new_var($name: string) : capsule<ast_node> { { #exit } }
+function $new_const_int($v: i64) : capsule<ast_node> { { #exit } }
+function $new_const_float($v: f64) : capsule<ast_node> { { #exit } }
+function $new_const_string($v: string) : capsule<ast_node> { { #exit } }
+function $new_label($name: string) : capsule<ast_node> { { #exit } }
+function $new_goto($name: string) : capsule<ast_node> { { #exit } }
