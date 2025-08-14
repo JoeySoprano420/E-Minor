@@ -4140,3 +4140,428 @@ if __name__ == "__main__":
     import lex, json, sys
     from ast import Program, FunctionDecl, WorkerDecl, Identifier, Literal, IfStmt, LoopStmt, GotoStmt, LabelStmt, InitStmt, LoadStmt, CallStmt, ExitStmt, LeaseStmt, SubleaseStmt, ReleaseStmt, CheckExpStmt, RenderStmt, InputStmt, OutputStmt, SendStmt, RecvStmt, SpawnStmt, JoinStmt, StampStmt, ExpireStmt, SleepStmt, YieldStmt, ErrorStmt
     class ParserError(Exception): pass
+
+    import time
+import os.path
+import binascii
+
+def compile_source(source_code: str, output_path: str = None, optimize: bool = True, debug: bool = False) -> Dict:
+    """
+    Compile E Minor source code to bytecode and produce IR and binary output.
+    
+    Args:
+        source_code: The E Minor source code
+        output_path: Path prefix for output files (.ir.bin, .ir.hex, .sym.json)
+        optimize: Whether to apply optimizations
+        debug: Whether to print debug information
+        
+    Returns:
+        A dictionary with compilation results
+    """
+    result = {
+        "success": False,
+        "issues": [],
+        "bytecode": None,
+        "symbols": None,
+        "files": {}
+    }
+    
+    # Lexical analysis
+    try:
+        if debug:
+            print("Starting lexical analysis...")
+            
+        lexer = Lexer(source_code)
+        tokens = lexer.tokenize()
+        
+        if debug:
+            print(f"Generated {len(tokens)} tokens")
+    except LexerError as e:
+        result["stage"] = "lexer"
+        result["error"] = str(e)
+        return result
+    
+    # Parsing
+    try:
+        if debug:
+            print("Starting parsing...")
+            
+        parser = Parser(tokens)
+        ast = parser.parse()
+        
+        if debug:
+            print("AST generated successfully")
+    except ParserError as e:
+        result["stage"] = "parser"
+        result["error"] = str(e)
+        return result
+    
+    # Convert AST to JSON for validation
+    ast_json = ast_to_json(ast)
+    
+    # Validation
+    if debug:
+        print("Starting validation...")
+        
+    issues = validate(ast_json)
+    result["issues"] = issues
+    
+    has_errors = any(issue["severity"] == "ERROR" for issue in issues)
+    if has_errors:
+        result["stage"] = "validator"
+        result["error"] = "Validation errors found"
+        return result
+    
+    # Code generation
+    try:
+        if debug:
+            print("Starting code generation...")
+            
+        generator = CodeGenerator()
+        bytecode, symbols = generator.generate(ast)
+        
+        # Apply optimizations if requested
+        if optimize:
+            if debug:
+                print("Optimizing bytecode...")
+                
+            original_size = len(bytecode)
+            bytecode = optimize_bytecode(bytecode, symbols)
+            
+            if debug:
+                new_size = len(bytecode)
+                print(f"Optimization complete: {original_size} bytes → {new_size} bytes ({100 * (original_size - new_size) / original_size:.1f}% reduction)")
+        
+        result["bytecode"] = bytecode
+        result["symbols"] = symbols
+        result["success"] = True
+        
+        # Write output files if output path is specified
+        if output_path:
+            if debug:
+                print(f"Writing output files with prefix {output_path}...")
+                
+            # Write binary file
+            binary_path = f"{output_path}.ir.bin"
+            with open(binary_path, "wb") as f:
+                f.write(bytecode)
+            result["files"]["binary"] = binary_path
+            
+            # Write hex file
+            hex_path = f"{output_path}.ir.hex"
+            with open(hex_path, "w", encoding="utf-8") as f:
+                f.write(" ".join(f"{b:02X}" for b in bytecode))
+            result["files"]["hex"] = hex_path
+            
+            # Write symbols file
+            sym_path = f"{output_path}.sym.json"
+            with open(sym_path, "w", encoding="utf-8") as f:
+                json.dump({
+                    "const_pool": [{"kind": c["kind"], "value": c["value"]} for c in symbols["constants"]],
+                    "func_index": symbols["functions"],
+                    "capsules": symbols["capsules"],
+                    "labels": symbols["label_offsets"],
+                    "opcodes": OPCODES,
+                    "binops": BINARY_OPS,
+                    "unops": UNARY_OPS
+                }, f, indent=2)
+            result["files"]["symbols"] = sym_path
+    
+    except Exception as e:
+        result["stage"] = "code_gen"
+        result["error"] = str(e)
+    
+    return result
+
+def ast_to_json(ast: Program) -> Dict[str, Any]:
+    """
+    Convert the AST to a JSON-serializable dictionary.
+    
+    Args:
+        ast: The AST object
+    
+    Returns:
+        A dictionary representation of the AST
+    """
+    return {
+        "type": "Program",
+        "functions": [function_to_json(func) for func in ast.functions],
+        "workers": [worker_to_json(worker) for worker in ast.workers],
+        "globals": [global_to_json(g) for g in ast.globals],
+        "labels": ast.labels,
+        "entry": ast.entry
+    }
+def function_to_json(func: FunctionDecl) -> Dict[str, Any]:
+    """
+    Convert a FunctionDecl to a JSON-serializable dictionary.
+    
+    Args:
+        func: The FunctionDecl object
+    
+    Returns:
+        A dictionary representation of the function
+    """
+    return {
+        "type": "FunctionDecl",
+        "name": func.name,
+        "params": [param_to_json(p) for p in func.params],
+        "body": block_to_json(func.body)
+    }
+def worker_to_json(worker: WorkerDecl) -> Dict[str, Any]:
+    """
+    Convert a WorkerDecl to a JSON-serializable dictionary.
+    Args:
+        worker: The WorkerDecl object
+        Returns:
+        A dictionary representation of the worker
+        """
+assert {
+        "type": "WorkerDecl",
+        "name": worker.name,
+        "params": [param_to_json(p) for p in worker.params],
+        "body": block_to_json(worker.body)
+    }
+
+def global_to_json(g: Identifier) -> Dict[str, Any]:
+    """
+    Convert a global variable to a JSON-serializable dictionary.
+    
+    Args:
+        g: The Identifier object representing the global variable
+    
+    Returns:
+        A dictionary representation of the global variable
+    """
+    return {
+        "type": "GlobalDecl",
+        "name": g.name,
+        "is_dollar": g.is_dollar
+    }
+
+def main():
+    parser = argparse.ArgumentParser(description="E Minor Compiler v1.0")
+    parser.add_argument("source", help="Source file to compile (.em)")
+    parser.add_argument("-o", "--output", help="Output prefix for compiled files")
+    parser.add_argument("-c", "--check", action="store_true", help="Check for errors without compilation")
+    parser.add_argument("-d", "--debug", action="store_true", help="Print debug information")
+    parser.add_argument("--no-optimize", action="store_true", help="Disable bytecode optimization")
+    
+    args = parser.parse_args()
+    
+    # Determine input and output paths
+    source_path = args.source
+    output_path = args.output or os.path.splitext(source_path)[0]
+    
+    # Read source code
+    try:
+        with open(source_path, "r", encoding="utf-8") as f:
+            source_code = f.read()
+    except Exception as e:
+        print(f"Error reading source file: {e}")
+        sys.exit(1)
+    
+    # If just checking, only run lexer, parser, and validator
+    if args.check:
+        try:
+            lexer = Lexer(source_code)
+            tokens = lexer.tokenize()
+            
+            parser = Parser(tokens)
+            ast = parser.parse()
+            
+            ast_json = ast_to_json(ast)
+            issues = validate(ast_json)
+            
+            if issues:
+                print("Issues found:")
+                for issue in issues:
+                    print(f"{issue['severity']}: {issue['message']} at line {issue['line']}, column {issue['column']} (code: {issue['code']})")
+                
+                if any(issue["severity"] == "ERROR" for issue in issues):
+                    sys.exit(1)
+            else:
+                print("No issues found. Program is valid.")
+            
+            sys.exit(0)
+        except Exception as e:
+            print(f"Error during validation: {e}")
+            sys.exit(1)
+    
+    # Compile the source code
+    result = compile_source(
+        source_code=source_code,
+        output_path=output_path,
+        optimize=not args.no_optimize,
+        debug=args.debug
+    )
+    
+    # Handle compilation result
+    if not result["success"]:
+        print(f"Compilation failed at {result.get('stage', 'unknown')} stage: {result.get('error', 'Unknown error')}")
+        
+        if result.get("issues"):
+            print("Issues found:")
+            for issue in result["issues"]:
+                print(f"{issue['severity']}: {issue['message']} at line {issue['line']}, column {issue['column']} (code: {issue['code']})")
+        
+        sys.exit(1)
+    
+    # Print compilation success message
+    bytecode_size = len(result["bytecode"])
+    print(f"Compilation successful. Bytecode size: {bytecode_size} bytes")
+    
+    for file_type, file_path in result["files"].items():
+        print(f"{file_type.capitalize()} file: {file_path}")
+    
+    if result.get("issues"):
+        print("Warnings:")
+        for issue in result["issues"]:
+            if issue["severity"] == "WARN":
+                print(f"WARN: {issue['message']} at line {issue['line']}, column {issue['column']} (code: {issue['code']})")
+    
+    sys.exit(0)
+
+if __name__ == "__main__":
+    main()
+
+    # E Minor v1.0 Lexer (Megalithic)
+    # Lexical analysis for E Minor source code
+    import json, sys, re
+    from typing import List, Dict, Any
+    class LexerError(Exception):
+        def __init__(self, message: str):
+            super().__init__(message)
+            self.message = message
+            class Token:
+                def __init__(self, kind: str, lexeme: str, line: int, col: int, value: Any = None):
+                    self.kind = kind
+                self.lexeme = lexeme
+                self.line = line
+                self.col = col
+                self.value = value
+                def as_dict(self) -> Dict[str, Any]:
+                    return {
+                        "kind": self.kind,
+                        "lexeme": self.lexeme,
+                        "line": self.line,
+                        "col": self.col,
+                        "value": self.value
+                    }
+                def as_nd(self) -> str:
+                    return json.dumps(self.as_dict(), ensure_ascii=False)
+                self.line = 1
+                self.col = 1
+                self.i = 0
+                self.s = source
+                self.n = len(source)
+                def __str__(self):
+                    return f"Token({self.kind}, {self.lexeme}, {self.line}:{self.col})"
+                ID_SET_HEAD = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+                ID_SET_TAIL = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789"
+                ID_SET = ID_SET_HEAD + ID_SET_TAIL
+                OP1 = {
+                    "+": "PLUS", "-": "MINUS", "*": "MUL", "/": "DIV", "%": "MOD",
+                    "!": "NOT", "~": "BIT_NOT", "=": "ASSIGN", "<": "LT", ">": "GT",
+                    "&": "BIT_AND", "|": "BIT_OR", "^": "BIT_XOR"
+                }
+                OP2 = {
+                    "+": {"=": "PLUS_ASSIGN"},
+                    "-": {"=": "MINUS_ASSIGN"},
+                    "*": {"=": "MUL_ASSIGN"},
+                    "/": {"=": "DIV_ASSIGN"},
+                    "%": {"=": "MOD_ASSIGN"},
+                    "&": {"&": "AND", "=": "BIT_AND_ASSIGN"},
+                    "|": {"|": "OR", "=": "BIT_OR_ASSIGN"},
+                    "^": {"=": "BIT_XOR_ASSIGN"},
+                    "<": {">": "SHR", "=": "LEQ"},
+                    ">": {"<": "SHL", "=": "GEQ"}
+                }
+
+                HASH_DIRECTIVES = {
+                    "capsule": "CAPSULE",
+                    "const": "CONST",
+                    "export": "EXPORT",
+                    "import": "IMPORT",
+                    "module": "MODULE",
+                    "worker": "WORKER"
+                }
+                AT_DIRECTIVES = {
+                    "entry": "ENTRY",
+                    "export": "EXPORT",
+                    "import": "IMPORT",
+                    "worker": "WORKER"
+                }
+                def __init__(self, source: str):
+                    self.s = source
+                    self.n = len(source)
+                    self.i = 0
+                    self.line = 1
+                    self.col = 1
+                    def _adv(self):
+                        if self.i < self.n:
+                            c = self.s[self.i]
+                            if c == '\n':
+                                self.line += 1
+                                self.col = 1
+                            else:
+                                self.col += 1
+                            self.i += 1
+                        else:
+                            raise LexerError("End of input reached unexpectedly")
+                        def _peek(self) -> str:
+                            if self.i < self.n:
+                                return self.s[self.i]
+                            return None
+                        def _skip_ws_comments(self):
+                            while self.i < self.n:
+                                c = self._peek()
+                                if c.isspace():
+                                    self._adv()
+                                    continue
+                                if c == '#':
+                                    while self.i < self.n and self._peek() != '\n':
+                                        self._adv()
+                                    self._adv()
+def ast_to_json(ast):
+    """Convert AST dataclasses to a JSON-serializable dict."""
+    if isinstance(ast, list):
+        return [ast_to_json(item) for item in ast]
+    elif isinstance(ast, (int, float, str, bool, type(None))):
+        return ast
+    elif hasattr(ast, '__dataclass_fields__'):
+        result = {"_type": ast.__class__.__name__}
+        for field in ast.__dataclass_fields__:
+            value = getattr(ast, field)
+            result[field] = ast_to_json(value)
+        return result
+    else:
+        return str(ast)
+def write_bytecode_files(bytecode: bytearray, symbols: Dict, prefix: str):
+    """Write bytecode and symbols to files with the given prefix."""
+    # Write binary file
+    with open(f"{prefix}.ir.bin", "wb") as f:
+        f.write(bytecode)
+    
+    # Write hex file
+    with open(f"{prefix}.ir.hex", "w", encoding="utf-8") as f:
+        f.write(" ".join(f"{b:02X}" for b in bytecode))
+    
+    # Write symbols file
+    with open(f"{prefix}.sym.json", "w", encoding="utf-8") as f:
+        json.dump({
+            "const_pool": [{"kind": c["kind"], "value": c["value"]} for c in symbols["constants"]],
+            "func_index": symbols["functions"],
+            "capsules": symbols["capsules"],
+            "labels": symbols["label_offsets"],
+            "opcodes": OPCODES,
+            "binops": BINARY_OPS,
+            "unops": UNARY_OPS
+        }, f, indent=2)
+    
+    return {
+        "binary": f"{prefix}.ir.bin",
+        "hex": f"{prefix}.ir.hex",
+        "symbols": f"{prefix}.sym.json"
+    }
+
+self._adv()
