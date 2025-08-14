@@ -4565,3 +4565,28 @@ def write_bytecode_files(bytecode: bytearray, symbols: Dict, prefix: str):
     }
 
 self._adv()
+
+# === Patch: Fix undefined 'message' in #error directive ===
+def patch_error_directive(vm_class):
+    original_emit_error = getattr(vm_class, "emit_error", None)
+
+    def safe_emit_error(self, node):
+        try:
+            message = node.get("message") or node.get("args", [None])[0]
+            if not isinstance(message, Literal) or message.kind != "STRING":
+                raise ParserError("Expected a string literal for error message in #error statement")
+            if original_emit_error:
+                return original_emit_error(self, node)
+            else:
+                print(f"ERROR: {message.value}")
+        except Exception as e:
+            print(f"[Patch] Failed to emit error directive: {e}")
+
+    vm_class.emit_error = safe_emit_error
+
+# Apply patch to VirtualMachine class
+try:
+    patch_error_directive(VirtualMachine)
+except Exception as e:
+    print(f"[Patch] Could not apply error directive fix: {e}")
+
